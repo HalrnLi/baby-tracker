@@ -1,0 +1,80 @@
+{
+  "project": "baby-tracker",
+  "phase": "Phase 3",
+  "stories": [
+    {
+      "id": 19,
+      "priority": 1,
+      "story": "PWA 配置",
+      "acceptance": [
+        "安装 vite-plugin-pwa 并配置",
+        "Service Worker 生成并缓存核心资源",
+        "manifest.json 配置桌面图标、主题色（粉色 #F9D5D5）",
+        "PWA 可添加到桌面",
+        "离线时显示缓存的页面"
+      ],
+      "passes": true
+    },
+    {
+      "id": 20,
+      "priority": 2,
+      "story": "提醒功能 - 后端接口",
+      "acceptance": [
+        "Reminder 模型有 lastTriggered 字段",
+        "每次触发提醒后更新 lastTriggered",
+        "GET /api/reminders 返回所有提醒含 lastTriggered"
+      ],
+      "passes": true
+    },
+    {
+      "id": 21,
+      "priority": 3,
+      "story": "提醒功能 - 前端 UI",
+      "acceptance": [
+        "Settings 页面显示提醒设置区域",
+        "可开启/关闭吸奶提醒、换尿布提醒",
+        "可设置提醒间隔（分钟）",
+        "显示当前提醒状态"
+      ],
+      "passes": true
+    },
+    {
+      "id": 22,
+      "priority": 4,
+      "story": "提醒功能 - 本地提醒",
+      "acceptance": [
+        "基于 setTimeout/setInterval 的本地提醒",
+        "App 打开时加载所有 enabled 提醒",
+        "根据 lastTriggered + intervalMinutes 计算下次提醒时间",
+        "到达提醒时间时使用 Web Notifications API 弹出通知",
+        "提醒触发后更新 lastTriggered 到服务端",
+        "华为浏览器兼容性问题已在文档中说明（已知风险）"
+      ],
+      "passes": true
+    },
+    {
+      "id": 23,
+      "priority": 5,
+      "story": "数据同步 - /api/sync 接口",
+      "acceptance": [
+        "GET /api/sync?lastSync=timestamp 返回上次同步后的新记录",
+        "POST /api/sync 接受本地新记录的数组，批量创建",
+        "创建记录时使用 client_created_at 时间戳",
+        "冲突策略：last-write-wins（服务端时间覆盖）"
+      ],
+      "passes": true
+    },
+    {
+      "id": 24,
+      "priority": 6,
+      "story": "数据同步 - 客户端集成",
+      "acceptance": [
+        "App 打开时（DashboardPage useEffect）调用 /api/sync GET 获取新记录",
+        "创建记录时带上 client_created_at（ISO 字符串）",
+        "提交记录时先 POST /api/sync 提交本地新记录，再处理响应",
+        "使用 localStorage 存储 lastSync 时间戳"
+      ],
+      "passes": true
+    }
+  ]
+}

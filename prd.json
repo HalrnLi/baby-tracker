@@ -1,0 +1,143 @@
+{
+  "project": "baby-tracker",
+  "phase": "Phase 1",
+  "stories": [
+    {
+      "id": 1,
+      "priority": 1,
+      "story": "项目初始化",
+      "acceptance": [
+        "前端能启动 Vite 开发服务器（localhost:5173 可访问）",
+        "后端能启动 Express 服务器（localhost:3000 可访问）",
+        "PostgreSQL 数据库连接成功（启动时无连接错误）",
+        "前后端能正常通信（前端能请求到后端 API）"
+      ],
+      "passes": true
+    },
+    {
+      "id": 2,
+      "priority": 2,
+      "story": "数据库模型定义",
+      "acceptance": [
+        "User 模型包含 id、email、password_hash、created_at 字段",
+        "Baby 模型包含 id、name、birth_date、gender、created_at 字段",
+        "Record 模型包含 id、baby_id、user_id、type、data、created_at 字段",
+        "Reminder 模型包含 id、baby_id、user_id、type、interval_minutes、enabled、last_triggered 字段",
+        "数据库迁移能成功执行，表结构与模型一致"
+      ],
+      "passes": true
+    },
+    {
+      "id": 3,
+      "priority": 3,
+      "story": "用户注册",
+      "acceptance": [
+        "POST /api/auth/register 接受 email 和 password",
+        "密码以 bcrypt 哈希存储，原始密码不存入数据库",
+        "email 重复注册返回 409 错误",
+        "注册成功返回 JWT token",
+        "输入不合法（空邮箱、空密码）返回 400 错误"
+      ],
+      "passes": true
+    },
+    {
+      "id": 4,
+      "priority": 4,
+      "story": "用户登录",
+      "acceptance": [
+        "POST /api/auth/login 接受 email 和 password",
+        "登录成功返回有效 JWT token",
+        "密码错误返回 401 错误",
+        "不存在的用户返回 401 错误",
+        "JWT token 包含 user_id 信息"
+      ],
+      "passes": true
+    },
+    {
+      "id": 5,
+      "priority": 5,
+      "story": "JWT 中间件认证",
+      "acceptance": [
+        "受保护路由（/api/baby、/api/records）需携带有效 JWT",
+        "无 token 或 token 过期返回 401 错误",
+        "有效 token 能正确解析出 user_id 并注入请求"
+      ],
+      "passes": true
+    },
+    {
+      "id": 6,
+      "priority": 6,
+      "story": "创建宝宝档案",
+      "acceptance": [
+        "POST /api/baby 需要 JWT 认证",
+        "接受 name、birth_date、gender 字段",
+        "宝宝档案归属于当前登录用户",
+        "创建成功返回宝宝档案数据（含 id）",
+        "缺少必填字段返回 400 错误"
+      ],
+      "passes": true
+    },
+    {
+      "id": 7,
+      "priority": 7,
+      "story": "获取宝宝档案",
+      "acceptance": [
+        "GET /api/baby 需要 JWT 认证",
+        "返回当前用户所属的宝宝档案列表",
+        "未创建过宝宝档案返回空数组"
+      ],
+      "passes": true
+    },
+    {
+      "id": 8,
+      "priority": 8,
+      "story": "创建记录",
+      "acceptance": [
+        "POST /api/records 需要 JWT 认证",
+        "接受 baby_id、type、data 字段，data 为 JSON 对象",
+        "记录自动关联当前用户 ID",
+        "支持 type 为 feed、pump、diaper、weight 的记录",
+        "创建成功返回记录数据（含 id 和 created_at）",
+        "baby_id 不属于当前用户返回 403 错误"
+      ],
+      "passes": true
+    },
+    {
+      "id": 9,
+      "priority": 9,
+      "story": "获取记录列表",
+      "acceptance": [
+        "GET /api/records 需要 JWT 认证",
+        "默认返回当前用户所有宝宝的全部记录，按 created_at 倒序",
+        "可通过 ?baby_id=X 筛选指定宝宝的记录",
+        "可通过 ?type=X 筛选指定类型的记录",
+        "返回结果包含完整的 id、baby_id、type、data、created_at"
+      ],
+      "passes": true
+    },
+    {
+      "id": 10,
+      "priority": 10,
+      "story": "删除记录",
+      "acceptance": [
+        "DELETE /api/records/:id 需要 JWT 认证",
+        "只能删除当前用户自己创建的记录",
+        "删除成功返回 204 No Content",
+        "删除他人记录返回 403 错误",
+        "删除不存在的记录返回 404 错误"
+      ],
+      "passes": true
+    },
+    {
+      "id": 11,
+      "priority": 11,
+      "story": "后端接口健康检查",
+      "acceptance": [
+        "GET /api/health 无需认证即可访问",
+        "返回服务状态（数据库连接状态、API 版本）",
+        "数据库断开时返回对应错误状态"
+      ],
+      "passes": true
+    }
+  ]
+}
