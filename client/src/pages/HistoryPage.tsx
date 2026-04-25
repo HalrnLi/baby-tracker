@@ -47,6 +47,7 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     babyApi.getAll().then(res => {
@@ -101,6 +102,25 @@ export default function HistoryPage() {
     setDisplayedRecords([...displayedRecords, ...more]);
     setHasMore(allRecords.length > currentLength + PAGE_SIZE);
     setLoadingMore(false);
+  };
+
+  const handleDelete = async (recordId: string) => {
+    if (!window.confirm('确定删除这条记录吗？此操作不可恢复')) return;
+    setDeletingIds(prev => new Set(prev).add(recordId));
+    try {
+      await recordsApi.delete(recordId);
+      setAllRecords(prev => prev.filter(r => r.id !== recordId));
+      setDisplayedRecords(prev => prev.filter(r => r.id !== recordId));
+    } catch (err) {
+      console.error('Failed to delete record:', err);
+      alert('删除失败，请稍后再试');
+    } finally {
+      setDeletingIds(prev => {
+        const next = new Set(prev);
+        next.delete(recordId);
+        return next;
+      });
+    }
   };
 
   // Group records by date
@@ -208,8 +228,18 @@ export default function HistoryPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="text-sm text-gray-500 whitespace-nowrap ml-2">
-                          {formatRecordTime(record.createdAt)}
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-500 whitespace-nowrap">
+                            {formatRecordTime(record.createdAt)}
+                          </span>
+                          <button
+                            onClick={() => handleDelete(record.id)}
+                            disabled={deletingIds.has(record.id)}
+                            className="min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-red-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                            aria-label="删除记录"
+                          >
+                            {deletingIds.has(record.id) ? '...' : '🗑'}
+                          </button>
                         </div>
                       </div>
                     ))}
