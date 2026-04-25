@@ -42,6 +42,7 @@ router.get('/', async (req: AuthRequest, res: Response): Promise<void> => {
 
     // Calculate date range
     const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - daysNum + 1);
     startDate.setHours(0, 0, 0, 0);
