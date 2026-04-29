@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { babyApi, recordsApi, Record as RecordType } from '../api';
 import Layout from '../components/Layout';
+import QuickEntrySheet from '../components/QuickEntrySheet';
 import { formatTimeAgo, getRecordIcon, getRecordLabel } from '../utils/format';
 import { useSync } from '../hooks/useSync';
 
@@ -11,6 +12,7 @@ export default function DashboardPage() {
   const [recentRecords, setRecentRecords] = useState<RecordType[]>([]);
   const [latestWeight, setLatestWeight] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showQuickEntry, setShowQuickEntry] = useState(false);
   const { sync } = useSync();
 
   useEffect(() => {
@@ -57,6 +59,10 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleQuickSuccess = () => {
+    loadData();
   };
 
   if (loading) {
@@ -206,6 +212,26 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {/* FAB - Quick Entry */}
+      {babies.length > 0 && (
+        <button
+          className="quick-fab"
+          onClick={() => setShowQuickEntry(true)}
+          aria-label="快速记录"
+        >
+          +
+        </button>
+      )}
+
+      {/* Quick Entry Sheet */}
+      {showQuickEntry && babies.length > 0 && (
+        <QuickEntrySheet
+          babyId={babies[0].id}
+          onClose={() => setShowQuickEntry(false)}
+          onSuccess={handleQuickSuccess}
+        />
+      )}
     </Layout>
   );
 }
