@@ -21,12 +21,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// Component to handle PWA and reminders setup when authenticated
 function AppSetup({ children }: { children: React.ReactNode }) {
-  // Initialize reminders when logged in
   useReminders();
 
-  // PWA: register service worker
   useEffect(() => {
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -47,86 +44,14 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={token ? <Navigate to="/" replace /> : <LoginPage />} />
       <Route path="/register" element={token ? <Navigate to="/" replace /> : <RegisterPage />} />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <AppSetup>
-              <DashboardPage />
-            </AppSetup>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/feed"
-        element={
-          <ProtectedRoute>
-            <AppSetup>
-              <FeedPage />
-            </AppSetup>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/pump"
-        element={
-          <ProtectedRoute>
-            <AppSetup>
-              <PumpPage />
-            </AppSetup>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/diaper"
-        element={
-          <ProtectedRoute>
-            <AppSetup>
-              <DiaperPage />
-            </AppSetup>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/weight"
-        element={
-          <ProtectedRoute>
-            <AppSetup>
-              <WeightPage />
-            </AppSetup>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/history"
-        element={
-          <ProtectedRoute>
-            <AppSetup>
-              <HistoryPage />
-            </AppSetup>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/stats"
-        element={
-          <ProtectedRoute>
-            <AppSetup>
-              <StatsPage />
-            </AppSetup>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute>
-            <AppSetup>
-              <SettingsPage />
-            </AppSetup>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+      <Route path="/feed" element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
+      <Route path="/pump" element={<ProtectedRoute><PumpPage /></ProtectedRoute>} />
+      <Route path="/diaper" element={<ProtectedRoute><DiaperPage /></ProtectedRoute>} />
+      <Route path="/weight" element={<ProtectedRoute><WeightPage /></ProtectedRoute>} />
+      <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+      <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
@@ -136,7 +61,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppRoutes />
+        <AppSetup>
+          <AppRoutes />
+        </AppSetup>
       </AuthProvider>
     </BrowserRouter>
   );

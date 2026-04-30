@@ -1,8 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { babyApi, recordsApi, Record as RecordType, RecordType as FilterType } from '../api';
 import Layout from '../components/Layout';
-import { formatRecordTime, getRecordIcon, getRecordLabel } from '../utils/format';
+import PageHeader from '../components/ui/PageHeader';
+import TabBar from '../components/ui/TabBar';
+import Card from '../components/ui/Card';
+import EmptyState from '../components/ui/EmptyState';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import ConfirmDialog from '../components/ui/ConfirmDialog';
+import Button from '../components/ui/Button';
+import { IconDelete, IconHistory } from '../components/icons';
+import { getRecordIcon } from '../components/icons';
+import { formatRecordTime, getRecordLabel } from '../utils/format';
+
+const typeColors: Record<string, { bg: string; text: string }> = {
+  feed: { bg: 'bg-rose-100', text: 'text-rose-500' },
+  pump: { bg: 'bg-sky-100', text: 'text-sky-500' },
+  diaper: { bg: 'bg-amber-100', text: 'text-amber-600' },
+  weight: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
+};
 
 type TabType = 'all' | FilterType;
 
@@ -23,7 +38,6 @@ function getDateGroup(dateStr: string): string {
   const yesterday = new Date(today.getTime() - 86400000);
   const weekAgo = new Date(today.getTime() - 7 * 86400000);
   const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
-
   const recordDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
   if (recordDate.getTime() === today.getTime()) return '今天';
@@ -38,9 +52,8 @@ interface GroupedRecords {
 }
 
 export default function HistoryPage() {
-  const navigate = useNavigate();
   const [babies, setBabies] = useState<any[]>([]);
-  const [selectedBabyId, setSelectedBabyId] = useState<string>('');
+  const [selectedBabyId, setSelectedBabyId] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('all');
   const [allRecords, setAllRecords] = useState<RecordType[]>([]);
   const [displayedRecords, setDisplayedRecords] = useState<RecordType[]>([]);
@@ -48,6 +61,7 @@ export default function HistoryPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   useEffect(() => {
     babyApi.getAll().then(res => {
@@ -63,9 +77,7 @@ export default function HistoryPage() {
     try {
       setLoading(true);
       const params: { baby_id: string; type?: FilterType } = { baby_id: babyId };
-      if (type) {
-        params.type = type;
-      }
+      if (type) params.type = type;
       const res = await recordsApi.getAll(params);
       const records = (res.data.records || []).sort(
         (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -86,14 +98,6 @@ export default function HistoryPage() {
     }
   }, [selectedBabyId, activeTab, loadRecords]);
 
-  const handleTabChange = (tab: TabType) => {
-    setActiveTab(tab);
-  };
-
-  const handleBabyChange = (babyId: string) => {
-    setSelectedBabyId(babyId);
-  };
-
   const loadMore = () => {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
@@ -104,8 +108,10 @@ export default function HistoryPage() {
     setLoadingMore(false);
   };
 
-  const handleDelete = async (recordId: string) => {
-    if (!window.confirm('确定删除这条记录吗？此操作不可恢复')) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    const recordId = deleteTarget;
+    setDeleteTarget(null);
     setDeletingIds(prev => new Set(prev).add(recordId));
     try {
       await recordsApi.delete(recordId);
@@ -113,7 +119,6 @@ export default function HistoryPage() {
       setDisplayedRecords(prev => prev.filter(r => r.id !== recordId));
     } catch (err) {
       console.error('Failed to delete record:', err);
-      alert('删除失败，请稍后再试');
     } finally {
       setDeletingIds(prev => {
         const next = new Set(prev);
@@ -123,13 +128,10 @@ export default function HistoryPage() {
     }
   };
 
-  // Group records by date
   const groupedRecords: GroupedRecords = {};
   displayedRecords.forEach(record => {
     const group = getDateGroup(record.createdAt);
-    if (!groupedRecords[group]) {
-      groupedRecords[group] = [];
-    }
+    if (!groupedRecords[group]) groupedRecords[group] = [];
     groupedRecords[group].push(record);
   });
 
@@ -138,8 +140,9 @@ export default function HistoryPage() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-gray-500">加载中...</div>
+        <div className="max-w-md mx-auto px-4 pt-3">
+          <PageHeader title="历史记录" />
+          <LoadingSpinner />
         </div>
       </Layout>
     );
@@ -147,25 +150,16 @@ export default function HistoryPage() {
 
   return (
     <Layout>
-      <div className="max-w-md mx-auto px-4 pt-3 pb-6">
-        {/* Header */}
-        <div className="flex items-center mb-4">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-1 text-[#7FC4C4] font-medium text-base min-h-[44px] px-2"
-          >
-            <span className="text-xl">←</span> 返回
-          </button>
-          <h1 className="flex-1 text-xl font-bold text-[#3A3A3A] text-center pr-10">历史记录</h1>
-        </div>
+      <div className="max-w-md mx-auto px-4 pt-3 pb-24">
+        <PageHeader title="历史记录" />
 
         {/* Baby selector */}
         {babies.length > 1 && (
           <div className="mb-4">
             <select
               value={selectedBabyId}
-              onChange={e => handleBabyChange(e.target.value)}
-              className="w-full p-3 bg-white rounded-xl border border-gray-200 min-h-[44px] shadow-sm"
+              onChange={e => setSelectedBabyId(e.target.value)}
+              className="w-full p-3 bg-warm-50 rounded-xl border border-stone-200 min-h-[44px] text-stone-900 focus:outline-none focus:ring-2 focus:ring-rose-300"
             >
               {babies.map((b: any) => (
                 <option key={b.id} value={b.id}>{b.name}</option>
@@ -175,27 +169,19 @@ export default function HistoryPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-4 bg-white rounded-xl p-1 shadow-sm">
-          {TABS.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => handleTabChange(tab.key)}
-              className={`flex-1 py-2 px-2 rounded-lg text-sm font-medium transition-colors min-h-[40px] ${
-                activeTab === tab.key
-                  ? 'bg-[#D9828E] text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="mb-4">
+          <TabBar tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
         </div>
 
-        {/* Records list */}
+        {/* Records */}
         {displayedRecords.length === 0 ? (
-          <div className="text-center py-10">
-            <p className="text-gray-400">暂无记录</p>
-          </div>
+          <Card>
+            <EmptyState
+              icon={<IconHistory size={40} />}
+              title="暂无记录"
+              description="还没有相关记录"
+            />
+          </Card>
         ) : (
           <div className="space-y-4">
             {groupOrder.map(group => {
@@ -204,65 +190,78 @@ export default function HistoryPage() {
 
               return (
                 <div key={group}>
-                  <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-2 px-1">
+                  <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2 px-1">
                     {group}
                   </h2>
-                  <div className="bg-white rounded-2xl p-4 shadow-sm space-y-0">
+                  <Card padding="sm">
                     {records.map((record, index) => (
                       <div
                         key={record.id}
-                        className={`flex items-start justify-between py-3 ${
-                          index < records.length - 1 ? 'border-b border-gray-100' : ''
+                        className={`flex items-center justify-between py-3 ${
+                          index < records.length - 1 ? 'border-b border-stone-100' : ''
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl" role="img" aria-label={record.type}>
-                            {getRecordIcon(record.type)}
-                          </span>
+                          <div className={`w-8 h-8 rounded-lg ${typeColors[record.type]?.bg || 'bg-stone-100'} ${typeColors[record.type]?.text || 'text-stone-500'} flex items-center justify-center`}>
+                            {getRecordIcon(record.type, 16)}
+                          </div>
                           <div>
-                            <div className="text-[#3A3A3A] font-medium">
+                            <div className="text-stone-700 text-sm font-medium">
                               {getRecordLabel(record.type, record.data)}
                             </div>
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-stone-400">
                               {record.baby?.name || ''}
                             </div>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500 whitespace-nowrap">
+                          <span className="text-xs text-stone-400 whitespace-nowrap">
                             {formatRecordTime(record.createdAt)}
                           </span>
                           <button
-                            onClick={() => handleDelete(record.id)}
+                            onClick={() => setDeleteTarget(record.id)}
                             disabled={deletingIds.has(record.id)}
-                            className="min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-400 hover:text-red-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="min-h-[44px] min-w-[44px] flex items-center justify-center text-stone-300 hover:text-red-400 disabled:opacity-40 transition-colors"
                             aria-label="删除记录"
                           >
-                            {deletingIds.has(record.id) ? '...' : '🗑'}
+                            {deletingIds.has(record.id) ? (
+                              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                              </svg>
+                            ) : (
+                              <IconDelete size={16} />
+                            )}
                           </button>
                         </div>
                       </div>
                     ))}
-                  </div>
+                  </Card>
                 </div>
               );
             })}
 
-            {/* Load more */}
             {hasMore && (
               <div className="text-center pt-2">
-                <button
-                  onClick={loadMore}
-                  disabled={loadingMore}
-                  className="px-6 py-2.5 bg-[#5EBFBF] text-white rounded-xl min-h-[44px] font-medium shadow-md disabled:opacity-50"
-                >
-                  {loadingMore ? '加载中...' : '加载更多'}
-                </button>
+                <Button variant="secondary" size="sm" onClick={loadMore} loading={loadingMore} className="w-auto px-6">
+                  加载更多
+                </Button>
               </div>
             )}
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="删除记录"
+        message="确定删除这条记录吗？此操作不可恢复。"
+        confirmLabel="删除"
+        cancelLabel="取消"
+        danger
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </Layout>
   );
 }

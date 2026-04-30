@@ -1,6 +1,9 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Button from '../components/ui/Button';
+import FormInput from '../components/ui/FormInput';
+import { IconBaby } from '../components/icons';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -26,51 +29,46 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-text">宝宝护理追踪器</h1>
-          <p className="text-text/60 mt-2">登录您的账号</p>
+    <div className="min-h-screen min-h-[100dvh] bg-warm-100 flex items-center justify-center px-4">
+      <div className="w-full max-w-sm animate-fade-in">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-rose-100 text-rose-400 mb-4">
+            <IconBaby size={32} />
+          </div>
+          <h1 className="text-2xl font-serif font-bold text-stone-900">宝宝护理追踪器</h1>
+          <p className="text-stone-400 mt-2 text-sm">记录宝宝的每一个珍贵时刻</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-3 rounded-xl text-sm">
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">
               {error}
             </div>
           )}
-          <div>
-            <label className="block text-sm font-medium text-text mb-1">邮箱</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="your@email.com"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text mb-1">密码</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="••••••••"
-              required
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary"
-          >
-            {loading ? '登录中...' : '登录'}
-          </button>
+          <FormInput
+            as="input"
+            label="邮箱"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="your@email.com"
+            required
+          />
+          <FormInput
+            as="input"
+            label="密码"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            required
+          />
+          <Button type="submit" loading={loading}>
+            登录
+          </Button>
         </form>
-        <p className="text-center mt-4 text-sm text-text/60">
+        <p className="text-center mt-6 text-sm text-stone-400">
           还没有账号？{' '}
-          <Link to="/register" className="text-accent font-medium hover:underline">
+          <Link to="/register" className="text-rose-400 font-medium hover:text-rose-500 transition-colors">
             立即注册
           </Link>
         </p>

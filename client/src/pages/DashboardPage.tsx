@@ -3,8 +3,19 @@ import { Link } from 'react-router-dom';
 import { babyApi, recordsApi, Record as RecordType } from '../api';
 import Layout from '../components/Layout';
 import QuickEntrySheet from '../components/QuickEntrySheet';
-import { formatTimeAgo, getRecordIcon, getRecordLabel } from '../utils/format';
+import Card from '../components/ui/Card';
+import EmptyState from '../components/ui/EmptyState';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { IconSettings, IconFeed, IconPump, IconDiaper, IconWeight, IconChevronRight, IconPlus, IconBaby } from '../components/icons';
+import { formatTimeAgo, getRecordLabel } from '../utils/format';
 import { useSync } from '../hooks/useSync';
+
+const typeColors: Record<string, { bg: string; text: string; border: string; accent: string }> = {
+  feed: { bg: 'bg-rose-50', text: 'text-rose-500', border: 'border-rose-200', accent: 'bg-rose-400' },
+  pump: { bg: 'bg-sky-50', text: 'text-sky-500', border: 'border-sky-200', accent: 'bg-sky-400' },
+  diaper: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200', accent: 'bg-amber-400' },
+  weight: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', accent: 'bg-emerald-400' },
+};
 
 export default function DashboardPage() {
   const [babies, setBabies] = useState<any[]>([]);
@@ -68,159 +79,165 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-gray-500">加载中...</div>
-        </div>
+        <LoadingSpinner />
       </Layout>
     );
   }
 
   return (
     <Layout>
-      <div className="max-w-md mx-auto px-4 pt-3 pb-6">
+      <div className="max-w-md mx-auto px-4 pt-3 pb-24">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-bold text-[#3A3A3A]">宝宝护理追踪</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-xl font-serif font-bold text-stone-900">宝宝护理追踪</h1>
           <Link
             to="/settings"
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-white shadow-sm text-lg"
+            className="w-10 h-10 flex items-center justify-center rounded-xl bg-warm-50 shadow-soft text-stone-400 hover:text-stone-600 transition-colors"
             aria-label="设置"
           >
-            ⚙️
+            <IconSettings size={20} />
           </Link>
         </div>
 
         {babies.length === 0 ? (
-          <div className="bg-white rounded-2xl p-5 shadow-sm text-center">
-            <p className="text-gray-500 mb-3">还没有宝宝档案</p>
-            <Link
-              to="/settings"
-              className="inline-block px-5 py-2.5 bg-[#5EBFBF] text-white rounded-xl min-h-[44px] font-medium shadow-md"
-            >
-              去设置宝宝信息
-            </Link>
-          </div>
+          <Card>
+            <EmptyState
+              icon={<IconBaby size={48} />}
+              title="还没有宝宝档案"
+              description="先去设置页面添加宝宝信息"
+              action={
+                <Link
+                  to="/settings"
+                  className="inline-block px-5 py-2.5 bg-rose-400 text-white rounded-xl min-h-[44px] font-medium shadow-soft hover:bg-rose-500 transition-colors"
+                >
+                  去设置宝宝信息
+                </Link>
+              }
+            />
+          </Card>
         ) : (
           <>
-            {/* 今日摘要 — 紧凑横向三栏 */}
-            <div className="bg-[#FBF3EE] rounded-2xl p-4 shadow-sm mb-3">
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">今日摘要</h2>
+            {/* 今日摘要 */}
+            <div className="mb-4">
+              <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3 px-1">今日摘要</h2>
               <div className="grid grid-cols-3 gap-2">
-                {/* 喂奶 */}
-                <div className="bg-[#D9828E]/10 rounded-xl py-3 px-2 text-center border border-[#D9828E]/20">
-                  <div className="text-2xl mb-0.5">🍼</div>
-                  <div className="text-2xl font-bold text-[#D9828E] leading-tight">{stats?.feedCount || 0}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">喂奶</div>
-                </div>
-                {/* 换尿布 */}
-                <div className="bg-[#5EBFBF]/10 rounded-xl py-3 px-2 text-center border border-[#5EBFBF]/20">
-                  <div className="text-2xl mb-0.5">🩲</div>
-                  <div className="text-2xl font-bold text-[#5EBFBF] leading-tight">{stats?.diaperCount || 0}</div>
-                  <div className="text-xs text-gray-500 mt-0.5">换尿布</div>
-                </div>
-                {/* 最新体重 */}
-                <div className="bg-gray-50 rounded-xl py-3 px-2 text-center border border-gray-200">
-                  <div className="text-2xl mb-0.5">📊</div>
-                  <div className="text-lg font-bold text-[#3A3A3A] leading-tight">
+                <Card padding="sm" className="text-center">
+                  <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-400 flex items-center justify-center mx-auto mb-2">
+                    <IconFeed size={20} />
+                  </div>
+                  <div className="text-2xl font-bold text-rose-500 leading-tight">{stats?.feedCount || 0}</div>
+                  <div className="text-[11px] text-stone-400 mt-0.5">喂奶</div>
+                </Card>
+                <Card padding="sm" className="text-center">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-500 flex items-center justify-center mx-auto mb-2">
+                    <IconDiaper size={20} />
+                  </div>
+                  <div className="text-2xl font-bold text-amber-500 leading-tight">{stats?.diaperCount || 0}</div>
+                  <div className="text-[11px] text-stone-400 mt-0.5">换尿布</div>
+                </Card>
+                <Card padding="sm" className="text-center">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-2">
+                    <IconWeight size={20} />
+                  </div>
+                  <div className="text-2xl font-bold text-warm-500 leading-tight">
                     {latestWeight ? `${latestWeight.data.weightKg}` : '—'}
                   </div>
-                  <div className="text-xs text-gray-500 mt-0.5">体重 kg</div>
-                </div>
+                  <div className="text-[11px] text-stone-400 mt-0.5">体重 kg</div>
+                </Card>
               </div>
               {stats?.lastFeed && (
-                <p className="text-xs text-gray-400 mt-2.5 text-center">
+                <p className="text-xs text-stone-400 mt-2 text-center">
                   上次喂奶：{new Date(stats.lastFeed.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               )}
             </div>
 
-            {/* 快捷操作区 — 浅色背景突出层次 */}
-            <div className="bg-[#FBF3EE] rounded-2xl p-3.5 mb-3">
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">快捷操作</h2>
-              <div className="grid grid-cols-4 gap-2">
-                <Link
-                  to="/feed"
-                  className="btn-card bg-[#D9828E] border-[#BE6B7A] rounded-xl py-2.5"
-                >
-                  <div className="text-2xl mb-0.5">🍼</div>
-                  <div className="text-xs font-medium text-[#3A3A3A] leading-tight">喂奶</div>
-                </Link>
-                <Link
-                  to="/pump"
-                  className="btn-card bg-[#5EBFBF] border-[#4A9E9E] rounded-xl py-2.5"
-                >
-                  <div className="text-2xl mb-0.5">🧴</div>
-                  <div className="text-xs font-medium text-[#3A3A3A] leading-tight">吸奶</div>
-                </Link>
-                <Link
-                  to="/diaper"
-                  className="btn-card bg-[#5EBFBF] border-[#4A9E9E] rounded-xl py-2.5"
-                >
-                  <div className="text-2xl mb-0.5">🩲</div>
-                  <div className="text-xs font-medium text-[#3A3A3A] leading-tight">换尿布</div>
-                </Link>
-                <Link
-                  to="/weight"
-                  className="btn-card bg-[#D9828E] border-[#BE6B7A] rounded-xl py-2.5"
-                >
-                  <div className="text-2xl mb-0.5">📊</div>
-                  <div className="text-xs font-medium text-[#3A3A3A] leading-tight">体重</div>
-                </Link>
+            {/* 快捷操作 */}
+            <div className="mb-4">
+              <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3 px-1">快捷操作</h2>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { to: '/feed', icon: IconFeed, label: '记录喂奶', color: typeColors.feed },
+                  { to: '/pump', icon: IconPump, label: '记录吸奶', color: typeColors.pump },
+                  { to: '/diaper', icon: IconDiaper, label: '换尿布', color: typeColors.diaper },
+                  { to: '/weight', icon: IconWeight, label: '记录体重', color: typeColors.weight },
+                ].map(({ to, icon: Icon, label, color }) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    className={`flex items-center gap-3 p-3.5 rounded-xl border ${color.border} ${color.bg} hover:shadow-soft transition-all active:scale-[0.98]`}
+                  >
+                    <div className={`w-9 h-9 rounded-lg ${color.accent} text-white flex items-center justify-center`}>
+                      <Icon size={18} />
+                    </div>
+                    <span className="text-sm font-medium text-stone-700">{label}</span>
+                  </Link>
+                ))}
               </div>
             </div>
 
             {/* 最近记录 */}
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3">最近记录</h2>
+            <Card>
+              <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3">最近记录</h2>
               {recentRecords.length === 0 ? (
-                <p className="text-gray-400 text-center py-3 text-sm">暂无记录</p>
+                <p className="text-stone-400 text-center py-6 text-sm">暂无记录</p>
               ) : (
                 <div className="space-y-0">
-                  {recentRecords.map((record) => (
-                    <div
-                      key={record.id}
-                      className="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xl" role="img" aria-label={record.type}>{getRecordIcon(record.type)}</span>
-                        <div>
-                          <div className="text-[#3A3A3A] text-sm font-medium">{getRecordLabel(record.type, record.data)}</div>
-                          <div className="text-xs text-gray-400">{record.baby?.name || ''}</div>
+                  {recentRecords.map((record) => {
+                    const colors = typeColors[record.type] || typeColors.weight;
+                    return (
+                      <div
+                        key={record.id}
+                        className="flex items-center justify-between py-3 border-b border-stone-100 last:border-0"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-lg ${colors.bg} ${colors.text} flex items-center justify-center`}>
+                            {record.type === 'feed' && <IconFeed size={16} />}
+                            {record.type === 'pump' && <IconPump size={16} />}
+                            {record.type === 'diaper' && <IconDiaper size={16} />}
+                            {record.type === 'weight' && <IconWeight size={16} />}
+                          </div>
+                          <div>
+                            <div className="text-stone-700 text-sm font-medium">{getRecordLabel(record.type, record.data)}</div>
+                            <div className="text-xs text-stone-400">{record.baby?.name || ''}</div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-stone-400 whitespace-nowrap ml-2">
+                          {formatTimeAgo(record.createdAt)}
                         </div>
                       </div>
-                      <div className="text-xs text-gray-400 whitespace-nowrap ml-2">
-                        {formatTimeAgo(record.createdAt)}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
-              <Link
-                to="/history"
-                className="block text-center text-sm text-[#D9828E] font-medium mt-3 py-1 min-h-[36px]"
-              >
-                查看全部历史 →
-              </Link>
-              <Link
-                to="/stats"
-                className="block text-center text-sm text-[#5EBFBF] font-medium mt-1 py-1 min-h-[36px]"
-              >
-                数据统计 →
-              </Link>
-            </div>
+              <div className="flex gap-2 mt-3">
+                <Link
+                  to="/history"
+                  className="flex-1 flex items-center justify-center gap-1 text-sm text-stone-500 hover:text-stone-700 font-medium py-2 rounded-lg hover:bg-warm-100 transition-colors"
+                >
+                  查看全部 <IconChevronRight size={16} />
+                </Link>
+                <Link
+                  to="/stats"
+                  className="flex-1 flex items-center justify-center gap-1 text-sm text-stone-500 hover:text-stone-700 font-medium py-2 rounded-lg hover:bg-warm-100 transition-colors"
+                >
+                  数据统计 <IconChevronRight size={16} />
+                </Link>
+              </div>
+            </Card>
           </>
         )}
       </div>
 
-      {/* FAB - Quick Entry */}
+      {/* FAB */}
       {babies.length > 0 && (
         <button
-          className="quick-fab"
+          className="fixed right-5 bottom-20 w-14 h-14 rounded-full bg-amber-400 text-white shadow-[0_4px_14px_rgba(251,191,36,0.35)] flex items-center justify-center hover:bg-amber-500 active:scale-95 transition-all z-40"
           onClick={() => setShowQuickEntry(true)}
           aria-label="快速记录"
         >
-          +
+          <IconPlus size={24} />
         </button>
       )}
 

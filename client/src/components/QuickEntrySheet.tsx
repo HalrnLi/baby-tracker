@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { syncApi, SyncRecord } from '../api';
+import { IconFeed, IconPump, IconDiaper, IconBreast, IconFormula, IconPee, IconPoop, IconBack } from './icons';
+import Toast from './ui/Toast';
 
 interface QuickEntrySheetProps {
   babyId: string;
@@ -9,18 +11,14 @@ interface QuickEntrySheetProps {
 
 type EntryStep = 'type' | 'feed-source' | 'pump-amount' | 'diaper-type';
 
-interface ToastState {
-  visible: boolean;
-  message: string;
-}
-
 export default function QuickEntrySheet({ babyId, onClose, onSuccess }: QuickEntrySheetProps) {
   const [step, setStep] = useState<EntryStep>('type');
   const [feedSource, setFeedSource] = useState<'breast' | 'formula' | null>(null);
   const [pumpAmount, setPumpAmount] = useState('');
   const [formulaAmount, setFormulaAmount] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState<ToastState>({ visible: false, message: '' });
+  const [toastMsg, setToastMsg] = useState('');
+  const [toastVisible, setToastVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -29,13 +27,15 @@ export default function QuickEntrySheet({ babyId, onClose, onSuccess }: QuickEnt
     }
   }, [step]);
 
-  const showToast = (message: string) => {
-    setToast({ visible: true, message });
-    setTimeout(() => {
-      setToast({ visible: false, message: '' });
-      onSuccess();
-      onClose();
-    }, 1500);
+  const showToast = (message: string, autoClose = true) => {
+    setToastMsg(message);
+    setToastVisible(true);
+    if (autoClose) {
+      setTimeout(() => {
+        onSuccess();
+        onClose();
+      }, 1500);
+    }
   };
 
   const handleSubmit = async (record: SyncRecord) => {
@@ -45,218 +45,233 @@ export default function QuickEntrySheet({ babyId, onClose, onSuccess }: QuickEnt
       showToast('记录成功');
     } catch (err) {
       console.error('Failed to submit:', err);
-      setToast({ visible: true, message: '提交失败，请重试' });
-      setTimeout(() => setToast({ visible: false, message: '' }), 2000);
+      showToast('提交失败，请重试', false);
+      setTimeout(() => setToastVisible(false), 2000);
     } finally {
       setSubmitting(false);
     }
   };
 
   const submitDiaper = (type: 'pee' | 'poop' | 'both') => {
-    const record: SyncRecord = {
+    handleSubmit({
       babyId,
       type: 'diaper',
       data: { type },
       clientCreatedAt: new Date().toISOString(),
-    };
-    handleSubmit(record);
+    });
   };
 
   const submitFeed = (source: 'breast' | 'formula', amount?: number) => {
     if (source === 'breast') {
-      const record: SyncRecord = {
+      handleSubmit({
         babyId,
         type: 'feed',
         data: { source: 'breast', amount: 0 },
         clientCreatedAt: new Date().toISOString(),
-      };
-      handleSubmit(record);
+      });
     } else {
       if (!amount || amount <= 0) {
-        setToast({ visible: true, message: '请输入有效的奶量' });
-        setTimeout(() => setToast({ visible: false, message: '' }), 2000);
+        showToast('请输入有效的奶量', false);
+        setTimeout(() => setToastVisible(false), 2000);
         return;
       }
-      const record: SyncRecord = {
+      handleSubmit({
         babyId,
         type: 'feed',
         data: { source: 'formula', amount },
         clientCreatedAt: new Date().toISOString(),
-      };
-      handleSubmit(record);
+      });
     }
   };
 
   const submitPump = () => {
     const amount = parseInt(pumpAmount, 10);
     if (!amount || amount <= 0) {
-      setToast({ visible: true, message: '请输入有效的奶量' });
-      setTimeout(() => setToast({ visible: false, message: '' }), 2000);
+      showToast('请输入有效的奶量', false);
+      setTimeout(() => setToastVisible(false), 2000);
       return;
     }
-    const record: SyncRecord = {
+    handleSubmit({
       type: 'pump',
       data: { amount },
       clientCreatedAt: new Date().toISOString(),
-    };
-    handleSubmit(record);
+    });
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
+    if (e.target === e.currentTarget) onClose();
   };
 
   return (
-    <div className="quick-entry-backdrop" onClick={handleBackdropClick}>
-      <div className="quick-entry-sheet">
-        <div className="sheet-handle" />
+    <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40 animate-fade-in" onClick={handleBackdropClick}>
+      <div className="bg-warm-100 rounded-t-[20px] px-6 pt-3 pb-10 w-full max-w-[480px] animate-slide-up">
+        {/* Handle */}
+        <div className="w-9 h-1 bg-stone-300 rounded-full mx-auto mb-4" />
 
-        <h2 className="sheet-title">快速记录</h2>
+        <h2 className="text-center text-base font-semibold text-stone-800 mb-5">快速记录</h2>
 
         {/* Step: Select type */}
         {step === 'type' && (
-          <div className="type-grid">
+          <div className="grid grid-cols-3 gap-3">
             <button
-              className="type-btn type-feed"
+              className="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-rose-200 bg-rose-50 hover:shadow-soft active:scale-[0.96] transition-all min-h-[88px]"
               onClick={() => setStep('feed-source')}
             >
-              <span className="type-icon">🍼</span>
-              <span className="type-label">喂奶</span>
+              <div className="w-10 h-10 rounded-xl bg-rose-400 text-white flex items-center justify-center mb-2">
+                <IconFeed size={20} />
+              </div>
+              <span className="text-xs font-semibold text-stone-700">喂奶</span>
             </button>
             <button
-              className="type-btn type-pump"
+              className="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-sky-200 bg-sky-50 hover:shadow-soft active:scale-[0.96] transition-all min-h-[88px]"
               onClick={() => setStep('pump-amount')}
             >
-              <span className="type-icon">🧴</span>
-              <span className="type-label">吸奶</span>
+              <div className="w-10 h-10 rounded-xl bg-sky-400 text-white flex items-center justify-center mb-2">
+                <IconPump size={20} />
+              </div>
+              <span className="text-xs font-semibold text-stone-700">吸奶</span>
             </button>
             <button
-              className="type-btn type-diaper"
+              className="flex flex-col items-center justify-center p-4 rounded-2xl border-2 border-amber-200 bg-amber-50 hover:shadow-soft active:scale-[0.96] transition-all min-h-[88px]"
               onClick={() => setStep('diaper-type')}
             >
-              <span className="type-icon">🩲</span>
-              <span className="type-label">尿布</span>
+              <div className="w-10 h-10 rounded-xl bg-amber-400 text-white flex items-center justify-center mb-2">
+                <IconDiaper size={20} />
+              </div>
+              <span className="text-xs font-semibold text-stone-700">尿布</span>
             </button>
           </div>
         )}
 
         {/* Step: Feed source */}
         {step === 'feed-source' && (
-          <div className="sub-step">
-            <p className="sub-title">选择喂奶方式</p>
-            <div className="sub-grid">
+          <div className="animate-fade-in">
+            <p className="text-center text-sm text-stone-500 mb-4">选择喂奶方式</p>
+            <div className="grid grid-cols-2 gap-3 mb-4">
               <button
-                className="sub-btn sub-breast"
+                className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-rose-200 bg-rose-50 hover:shadow-soft active:scale-[0.96] transition-all"
                 onClick={() => submitFeed('breast')}
                 disabled={submitting}
               >
-                <span className="sub-icon">🤱</span>
-                <span>母乳</span>
+                <IconBreast size={28} className="text-rose-400 mb-1" />
+                <span className="text-sm font-medium text-stone-700">母乳</span>
               </button>
               <button
-                className="sub-btn sub-formula"
+                className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-sky-200 bg-sky-50 hover:shadow-soft active:scale-[0.96] transition-all"
                 onClick={() => setFeedSource('formula')}
                 disabled={submitting}
               >
-                <span className="sub-icon">🍼</span>
-                <span>奶粉</span>
+                <IconFormula size={28} className="text-sky-400 mb-1" />
+                <span className="text-sm font-medium text-stone-700">奶粉</span>
               </button>
             </div>
             {feedSource === 'formula' && (
-              <div className="amount-input-wrap">
+              <div className="flex gap-2 mb-4 animate-fade-in">
                 <input
                   ref={inputRef}
                   type="number"
                   inputMode="decimal"
-                  className="amount-input"
+                  className="flex-1 p-3 border-2 border-stone-200 rounded-xl text-base bg-warm-50 text-stone-900 placeholder-stone-400 focus:outline-none focus:border-rose-400 transition-colors"
                   placeholder="输入奶量 (ml)"
                   value={formulaAmount}
                   onChange={(e) => setFormulaAmount(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && submitFeed('formula', parseInt(formulaAmount, 10))}
                 />
                 <button
-                  className="submit-btn"
+                  className="px-5 py-3 bg-rose-400 text-white rounded-xl text-sm font-semibold hover:bg-rose-500 active:scale-[0.97] transition-all disabled:opacity-50"
                   onClick={() => submitFeed('formula', parseInt(formulaAmount, 10))}
                   disabled={submitting || !formulaAmount}
                 >
-                  {submitting ? '提交中...' : '确定'}
+                  {submitting ? '...' : '确定'}
                 </button>
               </div>
             )}
-            <button className="back-btn" onClick={() => setStep('type')}>← 返回</button>
+            <button
+              className="w-full flex items-center justify-center gap-1 py-2 text-stone-400 hover:text-stone-600 text-sm transition-colors"
+              onClick={() => { setStep('type'); setFeedSource(null); }}
+            >
+              <IconBack size={16} /> 返回
+            </button>
           </div>
         )}
 
         {/* Step: Pump amount */}
         {step === 'pump-amount' && (
-          <div className="sub-step">
-            <p className="sub-title">输入吸奶量</p>
-            <div className="amount-input-wrap">
+          <div className="animate-fade-in">
+            <p className="text-center text-sm text-stone-500 mb-4">输入吸奶量</p>
+            <div className="flex gap-2 mb-4">
               <input
                 ref={inputRef}
                 type="number"
                 inputMode="decimal"
-                className="amount-input"
+                className="flex-1 p-3 border-2 border-stone-200 rounded-xl text-base bg-warm-50 text-stone-900 placeholder-stone-400 focus:outline-none focus:border-rose-400 transition-colors"
                 placeholder="输入奶量 (ml)"
                 value={pumpAmount}
                 onChange={(e) => setPumpAmount(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && submitPump()}
               />
               <button
-                className="submit-btn"
+                className="px-5 py-3 bg-rose-400 text-white rounded-xl text-sm font-semibold hover:bg-rose-500 active:scale-[0.97] transition-all disabled:opacity-50"
                 onClick={submitPump}
                 disabled={submitting || !pumpAmount}
               >
-                {submitting ? '提交中...' : '确定'}
+                {submitting ? '...' : '确定'}
               </button>
             </div>
-            <button className="back-btn" onClick={() => setStep('type')}>← 返回</button>
+            <button
+              className="w-full flex items-center justify-center gap-1 py-2 text-stone-400 hover:text-stone-600 text-sm transition-colors"
+              onClick={() => setStep('type')}
+            >
+              <IconBack size={16} /> 返回
+            </button>
           </div>
         )}
 
         {/* Step: Diaper type */}
         {step === 'diaper-type' && (
-          <div className="sub-step">
-            <p className="sub-title">选择尿布类型</p>
-            <div className="sub-grid sub-grid-3">
+          <div className="animate-fade-in">
+            <p className="text-center text-sm text-stone-500 mb-4">选择尿布类型</p>
+            <div className="grid grid-cols-3 gap-3 mb-4">
               <button
-                className="sub-btn"
+                className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-sky-200 bg-sky-50 hover:shadow-soft active:scale-[0.96] transition-all"
                 onClick={() => submitDiaper('pee')}
                 disabled={submitting}
               >
-                <span className="sub-icon">💧</span>
-                <span>小便</span>
+                <IconPee size={24} className="text-sky-400 mb-1" />
+                <span className="text-xs font-medium text-stone-700">小便</span>
               </button>
               <button
-                className="sub-btn"
+                className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-rose-200 bg-rose-50 hover:shadow-soft active:scale-[0.96] transition-all"
                 onClick={() => submitDiaper('poop')}
                 disabled={submitting}
               >
-                <span className="sub-icon">💩</span>
-                <span>大便</span>
+                <IconPoop size={24} className="text-rose-400 mb-1" />
+                <span className="text-xs font-medium text-stone-700">大便</span>
               </button>
               <button
-                className="sub-btn"
+                className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-stone-200 bg-stone-100 hover:shadow-soft active:scale-[0.96] transition-all"
                 onClick={() => submitDiaper('both')}
                 disabled={submitting}
               >
-                <span className="sub-icon">💥</span>
-                <span>两者</span>
+                <IconDiaper size={24} className="text-stone-500 mb-1" />
+                <span className="text-xs font-medium text-stone-700">两者</span>
               </button>
             </div>
-            <button className="back-btn" onClick={() => setStep('type')}>← 返回</button>
+            <button
+              className="w-full flex items-center justify-center gap-1 py-2 text-stone-400 hover:text-stone-600 text-sm transition-colors"
+              onClick={() => setStep('type')}
+            >
+              <IconBack size={16} /> 返回
+            </button>
           </div>
         )}
       </div>
 
-      {/* Toast */}
-      {toast.visible && (
-        <div className="quick-toast">
-          {toast.message}
-        </div>
-      )}
+      <Toast
+        message={toastMsg}
+        visible={toastVisible}
+        onHide={() => setToastVisible(false)}
+      />
     </div>
   );
 }
