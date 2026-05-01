@@ -47,7 +47,7 @@ export interface PumpData {
 }
 
 export interface DiaperData {
-  type: 'pee' | 'poop' | 'both';
+  type: 'pee' | 'poop';
 }
 
 export interface WeightData {
@@ -138,7 +138,7 @@ export interface DayStats {
   date: string;
   feed: { count: number; totalAmount: number; breastCount: number; formulaCount: number };
   pump: { count: number; totalAmount: number };
-  diaper: { count: number; pee: number; poop: number; both: number };
+  diaper: { count: number; pee: number; poop: number };
   weight: { count: number; latest: number | null };
 }
 

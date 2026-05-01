@@ -14,7 +14,7 @@ import { getRecordIcon } from './icons';
 
 const typeColors: Record<string, { bg: string; text: string }> = {
   feed: { bg: 'bg-rose-100', text: 'text-rose-500' },
-  pump: { bg: 'bg-sky-100', text: 'text-sky-500' },
+  pump: { bg: 'bg-violet-100', text: 'text-violet-500' },
   diaper: { bg: 'bg-amber-100', text: 'text-amber-600' },
   weight: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
 };
@@ -196,7 +196,7 @@ function getRecordLabel(type: string, data: any): string {
     }
     case 'pump': return `${data.amount}ml`;
     case 'diaper': {
-      const typeMap: Record<string, string> = { pee: '小便', poop: '大便', both: '大小便' };
+      const typeMap: Record<string, string> = { pee: '小便', poop: '大便' };
       return typeMap[data.type] || '换尿布';
     }
     case 'weight': return `${data.weightKg} kg`;

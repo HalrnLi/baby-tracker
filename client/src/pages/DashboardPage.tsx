@@ -1,21 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { babyApi, recordsApi, Record as RecordType } from '../api';
+import { babyApi, recordsApi, Record as RecordType, FeedData, DiaperData } from '../api';
 import Layout from '../components/Layout';
 import QuickEntrySheet from '../components/QuickEntrySheet';
 import Card from '../components/ui/Card';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { IconSettings, IconFeed, IconPump, IconDiaper, IconWeight, IconChevronRight, IconPlus, IconBaby } from '../components/icons';
+import { IconSettings, IconFeed, IconPump, IconDiaper, IconWeight, IconChevronRight, IconPlus, IconBaby, IconBreast, IconFormula, IconPee, IconPoop, IconBack } from '../components/icons';
 import { formatTimeAgo, getRecordLabel } from '../utils/format';
 import { useSync } from '../hooks/useSync';
-
-const typeColors: Record<string, { bg: string; text: string; border: string; accent: string }> = {
-  feed: { bg: 'bg-rose-50', text: 'text-rose-500', border: 'border-rose-200', accent: 'bg-rose-400' },
-  pump: { bg: 'bg-sky-50', text: 'text-sky-500', border: 'border-sky-200', accent: 'bg-sky-400' },
-  diaper: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200', accent: 'bg-amber-400' },
-  weight: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', accent: 'bg-emerald-400' },
-};
 
 export default function DashboardPage() {
   const [babies, setBabies] = useState<any[]>([]);
@@ -24,6 +17,9 @@ export default function DashboardPage() {
   const [latestWeight, setLatestWeight] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showQuickEntry, setShowQuickEntry] = useState(false);
+  const [todayFeedRecords, setTodayFeedRecords] = useState<RecordType[]>([]);
+  const [todayDiaperRecords, setTodayDiaperRecords] = useState<RecordType[]>([]);
+  const [detailSheetType, setDetailSheetType] = useState<'feed' | 'diaper' | null>(null);
   const { sync } = useSync();
 
   useEffect(() => {
@@ -46,10 +42,13 @@ export default function DashboardPage() {
           new Date(r.createdAt).toDateString() === today
         );
 
-        const feedCount = todayRecords.filter((r: any) => r.type === 'feed').length;
-        const diaperCount = todayRecords.filter((r: any) => r.type === 'diaper').length;
-        const lastFeed = todayRecords
-          .filter((r: any) => r.type === 'feed')
+        const feedRecs = todayRecords.filter((r: any) => r.type === 'feed');
+        const diaperRecs = todayRecords.filter((r: any) => r.type === 'diaper');
+        const feedCount = feedRecs.length;
+        const diaperCount = diaperRecs.length;
+        const lastFeed = [...feedRecs]
+          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+        const lastDiaper = [...diaperRecs]
           .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
 
         const weightRecords = allRecords
@@ -57,11 +56,20 @@ export default function DashboardPage() {
           .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         const latest = weightRecords[0] || null;
 
-        const recent = [...allRecords]
-          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .slice(0, 8);
+        const sortedRecords = [...allRecords]
+          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-        setStats({ feedCount, diaperCount, lastFeed });
+        const recent = [
+          sortedRecords.find((r: any) => r.type === 'feed' && r.data.source === 'breast'),
+          sortedRecords.find((r: any) => r.type === 'feed' && r.data.source === 'formula'),
+          sortedRecords.find((r: any) => r.type === 'pump'),
+          sortedRecords.find((r: any) => r.type === 'diaper' && r.data.type === 'pee'),
+          sortedRecords.find((r: any) => r.type === 'diaper' && r.data.type === 'poop'),
+        ].filter(Boolean) as RecordType[];
+
+        setStats({ feedCount, diaperCount, lastFeed, lastDiaper });
+        setTodayFeedRecords(feedRecs);
+        setTodayDiaperRecords(diaperRecs);
         setLatestWeight(latest);
         setRecentRecords(recent);
       }
@@ -76,6 +84,9 @@ export default function DashboardPage() {
     loadData();
   };
 
+  const formatTimeOnly = (dateStr: string) =>
+    new Date(dateStr).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+
   if (loading) {
     return (
       <Layout>
@@ -86,10 +97,10 @@ export default function DashboardPage() {
 
   return (
     <Layout>
-      <div className="max-w-md mx-auto px-4 pt-3 pb-24">
+      <div className="max-w-md mx-auto px-4 pt-3 pb-20">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-serif font-bold text-stone-900">宝宝护理追踪</h1>
           <Link
             to="/settings"
@@ -120,83 +131,75 @@ export default function DashboardPage() {
           <>
             {/* 今日摘要 */}
             <div className="mb-4">
-              <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3 px-1">今日摘要</h2>
+              <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2 px-1">今日摘要</h2>
               <div className="grid grid-cols-3 gap-2">
-                <Card padding="sm" className="text-center">
+                <button
+                  className="p-3 bg-warm-50 rounded-2xl shadow-soft text-center hover:shadow-lifted active:scale-[0.97] transition-all cursor-pointer"
+                  onClick={() => setDetailSheetType('feed')}
+                >
                   <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-400 flex items-center justify-center mx-auto mb-2">
                     <IconFeed size={20} />
                   </div>
                   <div className="text-2xl font-bold text-rose-500 leading-tight">{stats?.feedCount || 0}</div>
                   <div className="text-[11px] text-stone-400 mt-0.5">喂奶</div>
-                </Card>
-                <Card padding="sm" className="text-center">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-500 flex items-center justify-center mx-auto mb-2">
+                </button>
+                <button
+                  className="p-3 bg-warm-50 rounded-2xl shadow-soft text-center hover:shadow-lifted active:scale-[0.97] transition-all cursor-pointer"
+                  onClick={() => setDetailSheetType('diaper')}
+                >
+                  <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-500 flex items-center justify-center mx-auto mb-2">
                     <IconDiaper size={20} />
                   </div>
-                  <div className="text-2xl font-bold text-amber-500 leading-tight">{stats?.diaperCount || 0}</div>
+                  <div className="text-2xl font-bold text-sky-500 leading-tight">{stats?.diaperCount || 0}</div>
                   <div className="text-[11px] text-stone-400 mt-0.5">换尿布</div>
-                </Card>
-                <Card padding="sm" className="text-center">
+                </button>
+                <Link
+                  to="/weight"
+                  className="p-3 bg-warm-50 rounded-2xl shadow-soft text-center hover:shadow-lifted active:scale-[0.97] transition-all block"
+                >
                   <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-2">
                     <IconWeight size={20} />
                   </div>
-                  <div className="text-2xl font-bold text-warm-500 leading-tight">
+                  <div className="text-2xl font-bold text-emerald-600 leading-tight">
                     {latestWeight ? `${latestWeight.data.weightKg}` : '—'}
                   </div>
                   <div className="text-[11px] text-stone-400 mt-0.5">体重 kg</div>
-                </Card>
+                </Link>
               </div>
-              {stats?.lastFeed && (
+              {(stats?.lastFeed || stats?.lastDiaper) && (
                 <p className="text-xs text-stone-400 mt-2 text-center">
-                  上次喂奶：{new Date(stats.lastFeed.createdAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                  {stats?.lastFeed && <>上次喂奶：{formatTimeOnly(stats.lastFeed.createdAt)}</>}
+                  {stats?.lastFeed && stats?.lastDiaper && <> | </>}
+                  {stats?.lastDiaper && <>上次换尿布：{formatTimeOnly(stats.lastDiaper.createdAt)}</>}
                 </p>
               )}
             </div>
 
-            {/* 快捷操作 */}
-            <div className="mb-4">
-              <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3 px-1">快捷操作</h2>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { to: '/feed', icon: IconFeed, label: '记录喂奶', color: typeColors.feed },
-                  { to: '/pump', icon: IconPump, label: '记录吸奶', color: typeColors.pump },
-                  { to: '/diaper', icon: IconDiaper, label: '换尿布', color: typeColors.diaper },
-                  { to: '/weight', icon: IconWeight, label: '记录体重', color: typeColors.weight },
-                ].map(({ to, icon: Icon, label, color }) => (
-                  <Link
-                    key={to}
-                    to={to}
-                    className={`flex items-center gap-3 p-3.5 rounded-xl border ${color.border} ${color.bg} hover:shadow-soft transition-all active:scale-[0.98]`}
-                  >
-                    <div className={`w-9 h-9 rounded-lg ${color.accent} text-white flex items-center justify-center`}>
-                      <Icon size={18} />
-                    </div>
-                    <span className="text-sm font-medium text-stone-700">{label}</span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
             {/* 最近记录 */}
-            <Card>
+            <Card padding="sm">
               <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3">最近记录</h2>
               {recentRecords.length === 0 ? (
                 <p className="text-stone-400 text-center py-6 text-sm">暂无记录</p>
               ) : (
                 <div className="space-y-0">
                   {recentRecords.map((record) => {
-                    const colors = typeColors[record.type] || typeColors.weight;
+                    const data = record.data as any;
+                    const iconInfo = record.type === 'feed' && data.source === 'breast' ? { icon: IconBreast, bg: 'bg-rose-100', text: 'text-rose-400' }
+                      : record.type === 'feed' && data.source === 'formula' ? { icon: IconFormula, bg: 'bg-amber-100', text: 'text-amber-500' }
+                      : record.type === 'pump' ? { icon: IconPump, bg: 'bg-violet-100', text: 'text-violet-400' }
+                      : record.type === 'diaper' && data.type === 'pee' ? { icon: IconPee, bg: 'bg-sky-100', text: 'text-sky-400' }
+                      : record.type === 'diaper' && data.type === 'poop' ? { icon: IconPoop, bg: 'bg-rose-100', text: 'text-rose-400' }
+                      : record.type === 'diaper' ? { icon: IconDiaper, bg: 'bg-amber-100', text: 'text-amber-500' }
+                      : { icon: IconWeight, bg: 'bg-emerald-100', text: 'text-emerald-600' };
+                    const Icon = iconInfo.icon;
                     return (
                       <div
                         key={record.id}
-                        className="flex items-center justify-between py-3 border-b border-stone-100 last:border-0"
+                        className="flex items-center justify-between py-2 border-b border-stone-100 last:border-0"
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`w-8 h-8 rounded-lg ${colors.bg} ${colors.text} flex items-center justify-center`}>
-                            {record.type === 'feed' && <IconFeed size={16} />}
-                            {record.type === 'pump' && <IconPump size={16} />}
-                            {record.type === 'diaper' && <IconDiaper size={16} />}
-                            {record.type === 'weight' && <IconWeight size={16} />}
+                          <div className={`w-8 h-8 rounded-lg ${iconInfo.bg} ${iconInfo.text} flex items-center justify-center`}>
+                            <Icon size={16} />
                           </div>
                           <div>
                             <div className="text-stone-700 text-sm font-medium">{getRecordLabel(record.type, record.data)}</div>
@@ -211,16 +214,16 @@ export default function DashboardPage() {
                   })}
                 </div>
               )}
-              <div className="flex gap-2 mt-3">
+              <div className="flex gap-2 mt-2">
                 <Link
                   to="/history"
-                  className="flex-1 flex items-center justify-center gap-1 text-sm text-stone-500 hover:text-stone-700 font-medium py-2 rounded-lg hover:bg-warm-100 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1 text-sm text-stone-500 hover:text-stone-700 font-medium py-1.5 rounded-lg hover:bg-warm-100 transition-colors"
                 >
                   查看全部 <IconChevronRight size={16} />
                 </Link>
                 <Link
                   to="/stats"
-                  className="flex-1 flex items-center justify-center gap-1 text-sm text-stone-500 hover:text-stone-700 font-medium py-2 rounded-lg hover:bg-warm-100 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1 text-sm text-stone-500 hover:text-stone-700 font-medium py-1.5 rounded-lg hover:bg-warm-100 transition-colors"
                 >
                   数据统计 <IconChevronRight size={16} />
                 </Link>
@@ -248,6 +251,116 @@ export default function DashboardPage() {
           onClose={() => setShowQuickEntry(false)}
           onSuccess={handleQuickSuccess}
         />
+      )}
+
+      {/* Feed Detail Sheet */}
+      {detailSheetType === 'feed' && (
+        <div
+          className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40 animate-fade-in"
+          onClick={(e) => { if (e.target === e.currentTarget) setDetailSheetType(null); }}
+        >
+          <div className="bg-warm-100 rounded-t-[20px] px-6 pt-3 pb-10 w-full max-w-[480px] animate-slide-up max-h-[70vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="w-9 h-1 bg-stone-300 rounded-full mx-auto mb-4" />
+            <h2 className="text-center text-base font-semibold text-stone-800 mb-5">喂奶记录</h2>
+
+            <div className="text-center text-sm text-stone-500 mb-4">
+              母乳 {todayFeedRecords.filter(r => (r.data as FeedData).source === 'breast').length}次
+              {' | '}
+              奶粉 {todayFeedRecords.filter(r => (r.data as FeedData).source === 'formula').length}次
+            </div>
+
+            <div className="space-y-2">
+              {todayFeedRecords.length === 0 ? (
+                <p className="text-center text-stone-400 py-6 text-sm">今日暂无喂奶记录</p>
+              ) : (
+                [...todayFeedRecords]
+                  .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                  .map(record => {
+                    const data = record.data as FeedData;
+                    return (
+                      <div key={record.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-warm-50 shadow-soft">
+                        <div className="flex items-center gap-2.5">
+                          {data.source === 'breast' ? (
+                            <IconBreast size={18} className="text-rose-400" />
+                          ) : (
+                            <IconFormula size={18} className="text-amber-500" />
+                          )}
+                          <span className="text-sm text-stone-700">
+                            {data.source === 'breast' ? '母乳' : `奶粉 ${data.amount}ml`}
+                          </span>
+                        </div>
+                        <span className="text-xs text-stone-400">
+                          {formatTimeOnly(record.createdAt)}
+                        </span>
+                      </div>
+                    );
+                  })
+              )}
+            </div>
+
+            <button
+              className="w-full flex items-center justify-center gap-1 py-3 mt-4 text-stone-400 hover:text-stone-600 text-sm transition-colors"
+              onClick={() => setDetailSheetType(null)}
+            >
+              <IconBack size={16} /> 返回
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Diaper Detail Sheet */}
+      {detailSheetType === 'diaper' && (
+        <div
+          className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40 animate-fade-in"
+          onClick={(e) => { if (e.target === e.currentTarget) setDetailSheetType(null); }}
+        >
+          <div className="bg-warm-100 rounded-t-[20px] px-6 pt-3 pb-10 w-full max-w-[480px] animate-slide-up max-h-[70vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="w-9 h-1 bg-stone-300 rounded-full mx-auto mb-4" />
+            <h2 className="text-center text-base font-semibold text-stone-800 mb-5">尿布记录</h2>
+
+            <div className="text-center text-sm text-stone-500 mb-4">
+              小便 {todayDiaperRecords.filter(r => (r.data as DiaperData).type === 'pee').length}次
+              {' | '}
+              大便 {todayDiaperRecords.filter(r => (r.data as DiaperData).type === 'poop').length}次
+            </div>
+
+            <div className="space-y-2">
+              {todayDiaperRecords.length === 0 ? (
+                <p className="text-center text-stone-400 py-6 text-sm">今日暂无尿布记录</p>
+              ) : (
+                [...todayDiaperRecords]
+                  .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                  .map(record => {
+                    const data = record.data as DiaperData;
+                    const typeInfo: Record<string, { icon: typeof IconPee; color: string; label: string }> = {
+                      pee: { icon: IconPee, color: 'text-sky-400', label: '小便' },
+                      poop: { icon: IconPoop, color: 'text-rose-400', label: '大便' },
+                    };
+                    const info = typeInfo[data.type];
+                    const Icon = info.icon;
+                    return (
+                      <div key={record.id} className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-warm-50 shadow-soft">
+                        <div className="flex items-center gap-2.5">
+                          <Icon size={18} className={info.color} />
+                          <span className="text-sm text-stone-700">{info.label}</span>
+                        </div>
+                        <span className="text-xs text-stone-400">
+                          {formatTimeOnly(record.createdAt)}
+                        </span>
+                      </div>
+                    );
+                  })
+              )}
+            </div>
+
+            <button
+              className="w-full flex items-center justify-center gap-1 py-3 mt-4 text-stone-400 hover:text-stone-600 text-sm transition-colors"
+              onClick={() => setDetailSheetType(null)}
+            >
+              <IconBack size={16} /> 返回
+            </button>
+          </div>
+        </div>
       )}
     </Layout>
   );

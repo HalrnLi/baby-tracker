@@ -46,7 +46,7 @@ export default function FeedPage() {
                 onClick={() => setFormData({ ...formData, source: 'formula' })}
                 className={`flex-1 p-3 rounded-xl min-h-[44px] flex items-center justify-center gap-2 font-medium border transition-all ${
                   formData.source === 'formula'
-                    ? 'bg-sky-100 border-sky-300 text-sky-600'
+                    ? 'bg-amber-100 border-amber-300 text-amber-600'
                     : 'bg-warm-100 border-stone-200 text-stone-500'
                 }`}
               >
@@ -59,15 +59,22 @@ export default function FeedPage() {
           {formData.source === 'formula' && (
             <div>
               <label className="block text-sm font-medium text-stone-600 mb-1.5">奶量 (ml)</label>
-              <input
-                type="number"
-                value={formData.amount as string}
-                onChange={e => setFormData({ ...formData, amount: e.target.value })}
-                className="w-full p-3 bg-warm-50 rounded-xl border border-stone-200 min-h-[44px] text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 transition-colors"
-                placeholder="请输入奶量"
-                min="1"
-                required
-              />
+              <div className="grid grid-cols-3 gap-2">
+                {[30, 60, 90, 120, 150, 180].map(amount => (
+                  <button
+                    key={amount}
+                    type="button"
+                    className={`py-3 rounded-xl border-2 font-semibold text-base transition-all min-h-[44px] ${
+                      Number(formData.amount) === amount
+                        ? 'bg-amber-100 border-amber-300 text-amber-600'
+                        : 'bg-warm-100 border-stone-200 text-stone-500 hover:bg-amber-50 hover:border-amber-200'
+                    }`}
+                    onClick={() => setFormData({ ...formData, amount: String(amount) })}
+                  >
+                    {amount}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </>

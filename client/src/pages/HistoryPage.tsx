@@ -14,7 +14,7 @@ import { formatRecordTime, getRecordLabel } from '../utils/format';
 
 const typeColors: Record<string, { bg: string; text: string }> = {
   feed: { bg: 'bg-rose-100', text: 'text-rose-500' },
-  pump: { bg: 'bg-sky-100', text: 'text-sky-500' },
+  pump: { bg: 'bg-violet-100', text: 'text-violet-500' },
   diaper: { bg: 'bg-amber-100', text: 'text-amber-600' },
   weight: { bg: 'bg-emerald-100', text: 'text-emerald-600' },
 };

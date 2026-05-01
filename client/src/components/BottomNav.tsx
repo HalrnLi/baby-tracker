@@ -4,7 +4,7 @@ import { IconHome, IconFeed, IconPump, IconDiaper, IconWeight } from './icons';
 const tabs = [
   { path: '/', label: '首页', icon: IconHome, color: 'rose' },
   { path: '/feed', label: '喂奶', icon: IconFeed, color: 'rose' },
-  { path: '/pump', label: '吸奶', icon: IconPump, color: 'sky' },
+  { path: '/pump', label: '吸奶', icon: IconPump, color: 'violet' },
   { path: '/diaper', label: '尿布', icon: IconDiaper, color: 'amber' },
   { path: '/weight', label: '体重', icon: IconWeight, color: 'warm' },
 ];
@@ -12,6 +12,7 @@ const tabs = [
 const activeBg: Record<string, string> = {
   rose: 'bg-rose-100',
   sky: 'bg-sky-100',
+  violet: 'bg-violet-100',
   amber: 'bg-amber-100',
   warm: 'bg-emerald-100',
 };
@@ -19,6 +20,7 @@ const activeBg: Record<string, string> = {
 const activeText: Record<string, string> = {
   rose: 'text-rose-500',
   sky: 'text-sky-500',
+  violet: 'text-violet-500',
   amber: 'text-amber-500',
   warm: 'text-emerald-600',
 };

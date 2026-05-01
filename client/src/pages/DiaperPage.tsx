@@ -26,7 +26,6 @@ export default function DiaperPage() {
             {[
               { key: 'pee', label: '小便', icon: IconPee, color: 'sky' },
               { key: 'poop', label: '大便', icon: IconPoop, color: 'rose' },
-              { key: 'both', label: '两者', icon: IconDiaper, color: 'amber' },
             ].map(({ key, label, icon: Icon, color }) => (
               <button
                 key={key}

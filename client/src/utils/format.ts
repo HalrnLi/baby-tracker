@@ -63,7 +63,7 @@ export function getRecordLabel(type: string, data: any): string {
       return `${data.amount}ml`;
     }
     case 'diaper': {
-      const typeMap: Record<string, string> = { pee: '小便', poop: '大便', both: '大小便' };
+      const typeMap: Record<string, string> = { pee: '小便', poop: '大便' };
       return typeMap[data.type] || '换尿布';
     }
     case 'weight': {

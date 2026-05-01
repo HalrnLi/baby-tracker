@@ -29,7 +29,7 @@ function getDayLabel(dateStr: string): string {
 
 const tabColors = {
   feed: { bar: 'bg-rose-400', text: 'text-rose-500', bg: 'bg-rose-100' },
-  pump: { bar: 'bg-sky-400', text: 'text-sky-500', bg: 'bg-sky-100' },
+  pump: { bar: 'bg-violet-400', text: 'text-violet-500', bg: 'bg-violet-100' },
   diaper: { bar: 'bg-amber-400', text: 'text-amber-600', bg: 'bg-amber-50' },
 };
 
@@ -114,9 +114,9 @@ export default function StatsPage() {
               <div className="text-xs font-medium text-rose-400 mt-0.5">{summary.feed.totalAmount}ml</div>
             </Card>
             <Card padding="sm" className="text-center">
-              <div className="text-xl font-bold text-sky-500">{summary.pump.totalCount}</div>
+              <div className="text-xl font-bold text-violet-500">{summary.pump.totalCount}</div>
               <div className="text-[11px] text-stone-400">吸奶次数</div>
-              <div className="text-xs font-medium text-sky-400 mt-0.5">{summary.pump.totalAmount}ml</div>
+              <div className="text-xs font-medium text-violet-400 mt-0.5">{summary.pump.totalAmount}ml</div>
             </Card>
             <Card padding="sm" className="text-center">
               <div className="text-xl font-bold text-stone-600">{summary.diaper.totalCount}</div>
@@ -199,7 +199,7 @@ export default function StatsPage() {
                       </span>
                     )}
                     {day.pump.count > 0 && (
-                      <span className="bg-sky-50 text-sky-500 px-2 py-1 rounded-lg">
+                      <span className="bg-violet-50 text-violet-500 px-2 py-1 rounded-lg">
                         吸奶 {day.pump.count}次 {day.pump.totalAmount}ml
                       </span>
                     )}
