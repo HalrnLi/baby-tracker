@@ -92,10 +92,74 @@ PostgreSQL. Connection configured via `.env` (see `.env.example`). Sequelize syn
 
 ```
 PORT=3000
-DB_HOST=localhost
+NODE_ENV=production
+DB_HOST=your-postgres-host
 DB_PORT=5432
 DB_NAME=baby_tracker
 DB_USER=postgres
-DB_PASSWORD=
-JWT_SECRET=
+DB_PASSWORD=your-password
+JWT_SECRET=your-very-long-random-secret-at-least-32-chars
 ```
+
+## Deployment
+
+### PWA Installation
+
+The app is configured as a PWA (Progressive Web App). Once deployed with HTTPS:
+
+1. Open the app in your mobile browser
+2. Browser will prompt "Add to Home Screen"
+3. App will install and work like a native app (offline support, icon on home screen)
+
+**Requirements for PWA:**
+- HTTPS required (free on Railway, Render, Vercel)
+- PWA icons required (already added to `client/public/`)
+
+### Railway Deployment (Recommended)
+
+1. Create account at [railway.app](https://railway.app)
+2. Connect your GitHub repo
+3. Add a PostgreSQL database (Railway > New > Database > PostgreSQL)
+4. Set environment variables in Railway dashboard:
+   - `NODE_ENV=production`
+   - `DB_HOST` (from Railway PostgreSQL connection string)
+   - `DB_PORT=5432`
+   - `DB_NAME=baby_tracker`
+   - `DB_USER` (from connection string)
+   - `DB_PASSWORD` (from connection string)
+   - `JWT_SECRET` (generate a strong random string)
+5. Deploy - Railway auto-detects Node.js and runs `npm start`
+6. Once deployed, access via Railway-provided URL with HTTPS
+
+### Render Deployment
+
+1. Create account at [render.com](https://render.com)
+2. Create Web Service connected to your repo
+3. Build command: `npm run build`
+4. Start command: `cd server && npm start`
+5. Add PostgreSQL database (Render > New > Database > PostgreSQL)
+6. Set same environment variables as Railway above
+
+### Docker Deployment
+
+```bash
+docker build -t baby-tracker .
+docker run -p 3000:3000 \
+  -e NODE_ENV=production \
+  -e DB_HOST=your-postgres-host \
+  -e DB_PORT=5432 \
+  -e DB_NAME=baby_tracker \
+  -e DB_USER=postgres \
+  -e DB_PASSWORD=your-password \
+  -e JWT_SECRET=your-secret \
+  baby-tracker
+```
+
+### Files Added for Deployment
+
+- `railway.json` — Railway deployment configuration
+- `Dockerfile` — Multi-stage Docker build
+- `.dockerignore` — Exclude files from Docker context
+- `client/public/pwa-192x192.png` — PWA icon (192x192)
+- `client/public/pwa-512x512.png` — PWA icon (512x512)
+- `client/public/pwa-icon.svg` — PWA icon source

@@ -12,10 +12,17 @@
     "build:client": "cd client && npm run build",
     "install:all": "npm install && cd server && npm install && cd ../client && npm install"
   },
-  "keywords": ["baby", "tracker", "react", "express", "typescript"],
+  "keywords": [
+    "baby",
+    "tracker",
+    "react",
+    "express",
+    "typescript"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "sharp": "^0.34.5"
   }
 }

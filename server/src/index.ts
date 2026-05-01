@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { connectDatabase, syncDatabase } from './config/database';
 import routes from './routes';
 
@@ -33,6 +34,15 @@ app.get('/api/health', async (_req, res) => {
 
 // Routes
 app.use('/api', routes);
+
+// Serve static client files in production
+if (process.env.NODE_ENV === 'production') {
+  const clientDistPath = path.join(__dirname, '..', 'client-dist');
+  app.use(express.static(clientDistPath));
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 // 404 handler
 app.use((_req, res) => {
