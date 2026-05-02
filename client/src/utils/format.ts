@@ -56,11 +56,14 @@ export function getRecordLabel(type: string, data: any): string {
     case 'feed': {
       const sourceMap: Record<string, string> = { breast: '母乳', formula: '奶粉' };
       const sourceLabel = sourceMap[data.source] || data.source;
-      if (data.source === 'breast' || !data.amount) return sourceLabel;
+      if (data.source === 'breast') {
+        return data.amount ? `${sourceLabel} ${data.amount}ml` : '亲喂';
+      }
+      if (!data.amount) return sourceLabel;
       return `${sourceLabel} ${data.amount}ml`;
     }
     case 'pump': {
-      return `${data.amount}ml`;
+      return `吸奶 ${data.amount}ml`;
     }
     case 'diaper': {
       const typeMap: Record<string, string> = { pee: '小便', poop: '大便' };

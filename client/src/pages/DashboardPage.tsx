@@ -286,7 +286,7 @@ export default function DashboardPage() {
                             <IconFormula size={18} className="text-amber-500" />
                           )}
                           <span className="text-sm text-stone-700">
-                            {data.source === 'breast' ? '母乳' : `奶粉 ${data.amount}ml`}
+                            {data.source === 'breast' ? (data.amount ? `母乳 ${data.amount}ml` : '亲喂') : `奶粉 ${data.amount}ml`}
                           </span>
                         </div>
                         <span className="text-xs text-stone-400">

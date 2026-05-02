@@ -66,26 +66,17 @@ export default function QuickEntrySheet({ babyId, onClose, onSuccess }: QuickEnt
   };
 
   const submitFeed = (source: 'breast' | 'formula', amount?: number) => {
-    if (source === 'breast') {
-      handleSubmit({
-        babyId,
-        type: 'feed',
-        data: { source: 'breast', amount: 0 },
-        clientCreatedAt: new Date(recordTime).toISOString(),
-      });
-    } else {
-      if (!amount || amount <= 0) {
-        showToast('请输入有效的奶量', false);
-        setTimeout(() => setToastVisible(false), 2000);
-        return;
-      }
-      handleSubmit({
-        babyId,
-        type: 'feed',
-        data: { source: 'formula', amount },
-        clientCreatedAt: new Date(recordTime).toISOString(),
-      });
+    if (source === 'formula' && (!amount || amount <= 0)) {
+      showToast('请选择奶量', false);
+      setTimeout(() => setToastVisible(false), 2000);
+      return;
     }
+    handleSubmit({
+      babyId,
+      type: 'feed',
+      data: { source, amount: amount || 0 },
+      clientCreatedAt: new Date(recordTime).toISOString(),
+    });
   };
 
   const submitPump = () => {
@@ -166,7 +157,7 @@ export default function QuickEntrySheet({ babyId, onClose, onSuccess }: QuickEnt
             <div className="grid grid-cols-2 gap-3 mb-4">
               <button
                 className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-rose-200 bg-rose-50 hover:shadow-soft active:scale-[0.96] transition-all"
-                onClick={() => submitFeed('breast')}
+                onClick={() => setFeedSource('breast')}
                 disabled={submitting}
               >
                 <IconBreast size={28} className="text-rose-400 mb-1" />
@@ -181,18 +172,22 @@ export default function QuickEntrySheet({ babyId, onClose, onSuccess }: QuickEnt
                 <span className="text-sm font-medium text-stone-700">奶粉</span>
               </button>
             </div>
-            {feedSource === 'formula' && (
+            {feedSource && (
               <div className="animate-fade-in">
                 <p className="text-center text-sm text-stone-500 mb-3">选择奶量</p>
                 <div className="grid grid-cols-3 gap-2 mb-4">
-                  {[30, 60, 90, 120, 150, 180].map(amount => (
+                  {(feedSource === 'breast' ? [0, 30, 60, 90, 120, 150] : [30, 60, 90, 120, 150, 180]).map(amount => (
                     <button
                       key={amount}
-                      className="py-3 rounded-xl border-2 border-amber-200 bg-amber-50 text-amber-700 font-semibold text-base hover:bg-amber-100 active:scale-[0.96] transition-all min-h-[44px]"
-                      onClick={() => submitFeed('formula', amount)}
+                      className={`py-3 rounded-xl border-2 font-semibold text-base hover:bg-rose-50 active:scale-[0.96] transition-all min-h-[44px] ${
+                        feedSource === 'breast'
+                          ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
+                          : 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                      }`}
+                      onClick={() => submitFeed(feedSource, amount)}
                       disabled={submitting}
                     >
-                      {amount}
+                      {amount === 0 ? '亲喂' : amount}
                     </button>
                   ))}
                 </div>

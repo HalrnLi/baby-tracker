@@ -4,9 +4,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
-import FeedPage from './pages/FeedPage';
-import PumpPage from './pages/PumpPage';
-import DiaperPage from './pages/DiaperPage';
 import WeightPage from './pages/WeightPage';
 import SettingsPage from './pages/SettingsPage';
 import HistoryPage from './pages/HistoryPage';
@@ -45,9 +42,9 @@ function AppRoutes() {
       <Route path="/login" element={token ? <Navigate to="/" replace /> : <LoginPage />} />
       <Route path="/register" element={token ? <Navigate to="/" replace /> : <RegisterPage />} />
       <Route path="/" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-      <Route path="/feed" element={<ProtectedRoute><FeedPage /></ProtectedRoute>} />
-      <Route path="/pump" element={<ProtectedRoute><PumpPage /></ProtectedRoute>} />
-      <Route path="/diaper" element={<ProtectedRoute><DiaperPage /></ProtectedRoute>} />
+      <Route path="/feed" element={<Navigate to="/" replace />} />
+      <Route path="/pump" element={<Navigate to="/" replace />} />
+      <Route path="/diaper" element={<Navigate to="/" replace />} />
       <Route path="/weight" element={<ProtectedRoute><WeightPage /></ProtectedRoute>} />
       <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
       <Route path="/stats" element={<ProtectedRoute><StatsPage /></ProtectedRoute>} />

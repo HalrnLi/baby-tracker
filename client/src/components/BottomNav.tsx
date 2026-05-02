@@ -1,11 +1,8 @@
 import { NavLink } from 'react-router-dom';
-import { IconHome, IconFeed, IconPump, IconDiaper, IconWeight } from './icons';
+import { IconHome, IconWeight } from './icons';
 
 const tabs = [
   { path: '/', label: '首页', icon: IconHome, color: 'rose' },
-  { path: '/feed', label: '喂奶', icon: IconFeed, color: 'rose' },
-  { path: '/pump', label: '吸奶', icon: IconPump, color: 'violet' },
-  { path: '/diaper', label: '尿布', icon: IconDiaper, color: 'amber' },
   { path: '/weight', label: '体重', icon: IconWeight, color: 'warm' },
 ];
 
