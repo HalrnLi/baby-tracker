@@ -104,13 +104,13 @@ router.post('/', async (req: AuthRequest, res: Response): Promise<void> => {
         }
       }
 
-      // Create record - using server's createdAt for consistency
-      // clientCreatedAt is stored in the data field for reference (except for pump type)
+      // Create record with client's timestamp
       const created = await RecordModel.create({
-        babyId: babyId || null, // pump records don't need babyId
+        babyId: babyId || null,
         userId: req.userId!,
         type,
-        data: type === 'pump' ? data : { ...data, clientCreatedAt },
+        data,
+        createdAt: clientCreatedAt ? new Date(clientCreatedAt) : undefined,
       }, { transaction: t });
 
       // Re-fetch with associations

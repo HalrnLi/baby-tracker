@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { syncApi, SyncRecord } from '../api';
-import { IconFeed, IconPump, IconDiaper, IconBreast, IconFormula, IconPee, IconPoop, IconBack } from './icons';
+import { IconFeed, IconPump, IconDiaper, IconBreast, IconFormula, IconPee, IconPoop, IconBack, IconHistory } from './icons';
 import Toast from './ui/Toast';
 
 interface QuickEntrySheetProps {
@@ -19,6 +19,10 @@ export default function QuickEntrySheet({ babyId, onClose, onSuccess }: QuickEnt
   const [toastMsg, setToastMsg] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const now = new Date();
+  const defaultTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const [recordTime, setRecordTime] = useState(defaultTime);
 
   useEffect(() => {
     if (step === 'pump-amount' || step === 'feed-source') {
@@ -57,7 +61,7 @@ export default function QuickEntrySheet({ babyId, onClose, onSuccess }: QuickEnt
       babyId,
       type: 'diaper',
       data: { type },
-      clientCreatedAt: new Date().toISOString(),
+      clientCreatedAt: new Date(recordTime).toISOString(),
     });
   };
 
@@ -67,7 +71,7 @@ export default function QuickEntrySheet({ babyId, onClose, onSuccess }: QuickEnt
         babyId,
         type: 'feed',
         data: { source: 'breast', amount: 0 },
-        clientCreatedAt: new Date().toISOString(),
+        clientCreatedAt: new Date(recordTime).toISOString(),
       });
     } else {
       if (!amount || amount <= 0) {
@@ -79,7 +83,7 @@ export default function QuickEntrySheet({ babyId, onClose, onSuccess }: QuickEnt
         babyId,
         type: 'feed',
         data: { source: 'formula', amount },
-        clientCreatedAt: new Date().toISOString(),
+        clientCreatedAt: new Date(recordTime).toISOString(),
       });
     }
   };
@@ -95,7 +99,7 @@ export default function QuickEntrySheet({ babyId, onClose, onSuccess }: QuickEnt
       babyId,
       type: 'pump',
       data: { amount },
-      clientCreatedAt: new Date().toISOString(),
+      clientCreatedAt: new Date(recordTime).toISOString(),
     });
   };
 
@@ -110,6 +114,17 @@ export default function QuickEntrySheet({ babyId, onClose, onSuccess }: QuickEnt
         <div className="w-9 h-1 bg-stone-300 rounded-full mx-auto mb-4" />
 
         <h2 className="text-center text-base font-semibold text-stone-800 mb-5">快速记录</h2>
+
+        {/* Record time */}
+        <div className="flex items-center justify-center gap-1.5 mb-4">
+          <IconHistory size={14} className="text-stone-400 shrink-0" />
+          <input
+            type="datetime-local"
+            value={recordTime}
+            onChange={(e) => setRecordTime(e.target.value)}
+            className="text-sm text-stone-400 bg-transparent border-none outline-none p-0 [color-scheme:light]"
+          />
+        </div>
 
         {/* Step: Select type */}
         {step === 'type' && (
