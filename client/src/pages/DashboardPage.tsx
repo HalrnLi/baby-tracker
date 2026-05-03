@@ -7,7 +7,7 @@ import Card from '../components/ui/Card';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { IconSettings, IconFeed, IconPump, IconDiaper, IconWeight, IconChevronRight, IconPlus, IconBaby, IconBreast, IconFormula, IconPee, IconPoop, IconBack } from '../components/icons';
-import { formatTimeAgo, getRecordLabel } from '../utils/format';
+import { formatTimeAgo, formatRecordTime, getRecordLabel } from '../utils/format';
 import { useSync } from '../hooks/useSync';
 
 export default function DashboardPage() {
@@ -251,7 +251,7 @@ export default function DashboardPage() {
                           </div>
                         </div>
                         <div className="text-xs text-stone-400 whitespace-nowrap ml-2">
-                          {formatTimeAgo(record.createdAt)}
+                          {formatRecordTime(record.createdAt)}
                         </div>
                       </div>
                     );
