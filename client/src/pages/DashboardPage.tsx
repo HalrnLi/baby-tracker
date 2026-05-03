@@ -20,6 +20,8 @@ export default function DashboardPage() {
   const [todayFeedRecords, setTodayFeedRecords] = useState<RecordType[]>([]);
   const [todayDiaperRecords, setTodayDiaperRecords] = useState<RecordType[]>([]);
   const [detailSheetType, setDetailSheetType] = useState<'feed' | 'diaper' | null>(null);
+  const [showWeightSheet, setShowWeightSheet] = useState(false);
+  const [weightInput, setWeightInput] = useState('');
   const { sync } = useSync();
 
   useEffect(() => {
@@ -42,14 +44,8 @@ export default function DashboardPage() {
           new Date(r.createdAt).toDateString() === today
         );
 
-        const feedRecs = todayRecords.filter((r: any) => r.type === 'feed');
-        const diaperRecs = todayRecords.filter((r: any) => r.type === 'diaper');
-        const feedCount = feedRecs.length;
-        const diaperCount = diaperRecs.length;
-        const lastFeed = [...feedRecs]
-          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
-        const lastDiaper = [...diaperRecs]
-          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
+        const feedCount = todayRecords.filter((r: any) => r.type === 'feed').length;
+        const diaperCount = todayRecords.filter((r: any) => r.type === 'diaper').length;
 
         const weightRecords = allRecords
           .filter((r: any) => r.type === 'weight')
@@ -59,17 +55,18 @@ export default function DashboardPage() {
         const sortedRecords = [...allRecords]
           .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
+        const lastFeed = sortedRecords.find((r: any) => r.type === 'feed') || null;
+        const lastDiaper = sortedRecords.find((r: any) => r.type === 'diaper') || null;
+
         const recent = [
-          sortedRecords.find((r: any) => r.type === 'feed' && r.data.source === 'breast'),
-          sortedRecords.find((r: any) => r.type === 'feed' && r.data.source === 'formula'),
+          sortedRecords.find((r: any) => r.type === 'feed'),
           sortedRecords.find((r: any) => r.type === 'pump'),
-          sortedRecords.find((r: any) => r.type === 'diaper' && r.data.type === 'pee'),
-          sortedRecords.find((r: any) => r.type === 'diaper' && r.data.type === 'poop'),
+          sortedRecords.find((r: any) => r.type === 'diaper'),
         ].filter(Boolean) as RecordType[];
 
         setStats({ feedCount, diaperCount, lastFeed, lastDiaper });
-        setTodayFeedRecords(feedRecs);
-        setTodayDiaperRecords(diaperRecs);
+        setTodayFeedRecords(todayRecords.filter((r: any) => r.type === 'feed'));
+        setTodayDiaperRecords(todayRecords.filter((r: any) => r.type === 'diaper'));
         setLatestWeight(latest);
         setRecentRecords(recent);
       }
@@ -82,6 +79,22 @@ export default function DashboardPage() {
 
   const handleQuickSuccess = () => {
     loadData();
+  };
+
+  const handleSaveWeight = async () => {
+    if (!weightInput || Number(weightInput) <= 0 || !babies[0]) return;
+    try {
+      await recordsApi.create({
+        babyId: babies[0].id,
+        type: 'weight',
+        data: { weightKg: Number(weightInput) },
+      });
+      setShowWeightSheet(false);
+      setWeightInput('');
+      loadData();
+    } catch (err) {
+      console.error('Failed to save weight:', err);
+    }
   };
 
   const formatTimeOnly = (dateStr: string) =>
@@ -129,50 +142,81 @@ export default function DashboardPage() {
           </Card>
         ) : (
           <>
+            {/* 上次状态卡片 */}
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div className="p-4 bg-warm-50 rounded-2xl shadow-soft">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-400 flex items-center justify-center">
+                    <IconFeed size={18} />
+                  </div>
+                  <span className="text-sm font-semibold text-stone-600">喂奶</span>
+                </div>
+                {stats?.lastFeed ? (
+                  <>
+                    <div className="text-lg font-bold text-stone-800">
+                      {formatTimeAgo(stats.lastFeed.createdAt)}
+                    </div>
+                    <div className="text-xs text-stone-400 mt-0.5">
+                      {getRecordLabel(stats.lastFeed.type, stats.lastFeed.data)}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-sm text-stone-400">暂无记录</div>
+                )}
+              </div>
+              <div className="p-4 bg-warm-50 rounded-2xl shadow-soft">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-500 flex items-center justify-center">
+                    <IconDiaper size={18} />
+                  </div>
+                  <span className="text-sm font-semibold text-stone-600">尿布</span>
+                </div>
+                {stats?.lastDiaper ? (
+                  <>
+                    <div className="text-lg font-bold text-stone-800">
+                      {formatTimeAgo(stats.lastDiaper.createdAt)}
+                    </div>
+                    <div className="text-xs text-stone-400 mt-0.5">
+                      {getRecordLabel(stats.lastDiaper.type, stats.lastDiaper.data)}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-sm text-stone-400">暂无记录</div>
+                )}
+              </div>
+            </div>
+
             {/* 今日摘要 */}
-            <div className="mb-4">
+            <div className="mb-5">
               <h2 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2 px-1">今日摘要</h2>
               <div className="grid grid-cols-3 gap-2">
                 <button
                   className="p-3 bg-warm-50 rounded-2xl shadow-soft text-center hover:shadow-lifted active:scale-[0.97] transition-all cursor-pointer"
                   onClick={() => setDetailSheetType('feed')}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-400 flex items-center justify-center mx-auto mb-2">
-                    <IconFeed size={20} />
-                  </div>
-                  <div className="text-2xl font-bold text-rose-500 leading-tight">{stats?.feedCount || 0}</div>
-                  <div className="text-[11px] text-stone-400 mt-0.5">喂奶</div>
+                  <div className="text-xs text-rose-400 font-medium mb-1">喂奶</div>
+                  <div className="text-2xl font-bold text-rose-500">{stats?.feedCount || 0}</div>
+                  <div className="text-[11px] text-stone-400 mt-0.5">次</div>
                 </button>
                 <button
                   className="p-3 bg-warm-50 rounded-2xl shadow-soft text-center hover:shadow-lifted active:scale-[0.97] transition-all cursor-pointer"
                   onClick={() => setDetailSheetType('diaper')}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-500 flex items-center justify-center mx-auto mb-2">
-                    <IconDiaper size={20} />
-                  </div>
-                  <div className="text-2xl font-bold text-sky-500 leading-tight">{stats?.diaperCount || 0}</div>
-                  <div className="text-[11px] text-stone-400 mt-0.5">换尿布</div>
+                  <div className="text-xs text-sky-500 font-medium mb-1">尿布</div>
+                  <div className="text-2xl font-bold text-sky-500">{stats?.diaperCount || 0}</div>
+                  <div className="text-[11px] text-stone-400 mt-0.5">次</div>
                 </button>
-                <Link
-                  to="/weight"
-                  className="p-3 bg-warm-50 rounded-2xl shadow-soft text-center hover:shadow-lifted active:scale-[0.97] transition-all block"
+                <button
+                  className="p-3 bg-warm-50 rounded-2xl shadow-soft text-center hover:shadow-lifted active:scale-[0.97] transition-all cursor-pointer"
+                  onClick={() => setShowWeightSheet(true)}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-2">
-                    <IconWeight size={20} />
-                  </div>
-                  <div className="text-2xl font-bold text-emerald-600 leading-tight">
+                  <div className="text-xs text-emerald-600 font-medium mb-1">体重</div>
+                  <div className="text-2xl font-bold text-emerald-600">
                     {latestWeight ? `${latestWeight.data.weightKg}` : '—'}
                   </div>
-                  <div className="text-[11px] text-stone-400 mt-0.5">体重 kg</div>
-                </Link>
+                  <div className="text-[11px] text-stone-400 mt-0.5">kg</div>
+                </button>
               </div>
-              {(stats?.lastFeed || stats?.lastDiaper) && (
-                <p className="text-xs text-stone-400 mt-2 text-center">
-                  {stats?.lastFeed && <>上次喂奶：{formatTimeAgo(stats.lastFeed.createdAt)}</>}
-                  {stats?.lastFeed && stats?.lastDiaper && <> | </>}
-                  {stats?.lastDiaper && <>上次换尿布：{formatTimeAgo(stats.lastDiaper.createdAt)}</>}
-                </p>
-              )}
             </div>
 
             {/* 最近记录 */}
@@ -229,6 +273,55 @@ export default function DashboardPage() {
                 </Link>
               </div>
             </Card>
+
+            {/* Weight Recording Sheet */}
+            {showWeightSheet && (
+              <div
+                className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40 animate-fade-in"
+                onClick={(e) => { if (e.target === e.currentTarget) { setShowWeightSheet(false); setWeightInput(''); } }}
+              >
+                <div className="bg-warm-100 rounded-t-[20px] px-6 pt-3 pb-10 w-full max-w-[480px] animate-slide-up" onClick={e => e.stopPropagation()}>
+                  <div className="w-9 h-1 bg-stone-300 rounded-full mx-auto mb-4" />
+                  <h2 className="text-center text-base font-semibold text-stone-800 mb-5">记录体重</h2>
+
+                  <div className="flex items-center justify-center gap-2 mb-6">
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="w-32 text-center text-2xl font-bold py-3 px-4 rounded-xl bg-white border-0 shadow-soft focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      placeholder="4.2"
+                      value={weightInput}
+                      onChange={(e) => setWeightInput(e.target.value)}
+                      autoFocus
+                    />
+                    <span className="text-lg text-stone-500 font-medium">kg</span>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      className="flex-1 py-3 rounded-xl bg-white text-stone-500 font-medium shadow-soft hover:bg-stone-50 transition-colors"
+                      onClick={() => { setShowWeightSheet(false); setWeightInput(''); }}
+                    >
+                      取消
+                    </button>
+                    <button
+                      className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-medium shadow-soft hover:bg-emerald-600 disabled:opacity-50 transition-colors"
+                      disabled={!weightInput || Number(weightInput) <= 0}
+                      onClick={handleSaveWeight}
+                    >
+                      保存
+                    </button>
+                  </div>
+
+                  <button
+                    className="w-full flex items-center justify-center gap-1 py-3 mt-4 text-stone-400 hover:text-stone-600 text-sm transition-colors"
+                    onClick={() => { setShowWeightSheet(false); setWeightInput(''); }}
+                  >
+                    <IconBack size={16} /> 返回
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
