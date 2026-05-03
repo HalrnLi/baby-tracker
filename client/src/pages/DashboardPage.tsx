@@ -168,9 +168,9 @@ export default function DashboardPage() {
               </div>
               {(stats?.lastFeed || stats?.lastDiaper) && (
                 <p className="text-xs text-stone-400 mt-2 text-center">
-                  {stats?.lastFeed && <>上次喂奶：{formatTimeOnly(stats.lastFeed.createdAt)}</>}
+                  {stats?.lastFeed && <>上次喂奶：{formatTimeAgo(stats.lastFeed.createdAt)}</>}
                   {stats?.lastFeed && stats?.lastDiaper && <> | </>}
-                  {stats?.lastDiaper && <>上次换尿布：{formatTimeOnly(stats.lastDiaper.createdAt)}</>}
+                  {stats?.lastDiaper && <>上次换尿布：{formatTimeAgo(stats.lastDiaper.createdAt)}</>}
                 </p>
               )}
             </div>
@@ -274,7 +274,7 @@ export default function DashboardPage() {
                 <p className="text-center text-stone-400 py-6 text-sm">今日暂无喂奶记录</p>
               ) : (
                 [...todayFeedRecords]
-                  .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                   .map(record => {
                     const data = record.data as FeedData;
                     return (
@@ -329,7 +329,7 @@ export default function DashboardPage() {
                 <p className="text-center text-stone-400 py-6 text-sm">今日暂无尿布记录</p>
               ) : (
                 [...todayDiaperRecords]
-                  .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                   .map(record => {
                     const data = record.data as DiaperData;
                     const typeInfo: Record<string, { icon: typeof IconPee; color: string; label: string }> = {
