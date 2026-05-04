@@ -6,7 +6,7 @@ import QuickEntrySheet from '../components/QuickEntrySheet';
 import Card from '../components/ui/Card';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { IconSettings, IconFeed, IconPump, IconDiaper, IconWeight, IconChevronRight, IconPlus, IconBaby, IconBreast, IconFormula, IconPee, IconPoop, IconBack } from '../components/icons';
+import { IconFeed, IconPump, IconDiaper, IconWeight, IconPlus, IconBaby, IconBreast, IconFormula, IconPee, IconPoop, IconBack } from '../components/icons';
 import { formatTimeAgo, formatRecordTime, getRecordLabel } from '../utils/format';
 import { useSync } from '../hooks/useSync';
 
@@ -113,16 +113,7 @@ export default function DashboardPage() {
       <div className="max-w-md mx-auto px-4 pt-3 pb-20">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-serif font-bold text-stone-900">宝宝护理追踪</h1>
-          <Link
-            to="/settings"
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-warm-50 shadow-soft text-stone-400 hover:text-stone-600 transition-colors"
-            aria-label="设置"
-          >
-            <IconSettings size={20} />
-          </Link>
-        </div>
+        <h1 className="text-xl font-serif font-bold text-stone-900 mb-4">宝宝护理追踪</h1>
 
         {babies.length === 0 ? (
           <Card>
@@ -258,20 +249,6 @@ export default function DashboardPage() {
                   })}
                 </div>
               )}
-              <div className="flex gap-2 mt-2">
-                <Link
-                  to="/history"
-                  className="flex-1 flex items-center justify-center gap-1 text-sm text-stone-500 hover:text-stone-700 font-medium py-1.5 rounded-lg hover:bg-warm-100 transition-colors"
-                >
-                  查看全部 <IconChevronRight size={16} />
-                </Link>
-                <Link
-                  to="/stats"
-                  className="flex-1 flex items-center justify-center gap-1 text-sm text-stone-500 hover:text-stone-700 font-medium py-1.5 rounded-lg hover:bg-warm-100 transition-colors"
-                >
-                  数据统计 <IconChevronRight size={16} />
-                </Link>
-              </div>
             </Card>
 
             {/* Weight Recording Sheet */}

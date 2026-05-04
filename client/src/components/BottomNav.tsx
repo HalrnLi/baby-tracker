@@ -1,30 +1,30 @@
 import { NavLink } from 'react-router-dom';
-import { IconHome, IconWeight } from './icons';
+import { IconHome, IconHistory, IconStats, IconSettings } from './icons';
 
 const tabs = [
   { path: '/', label: '首页', icon: IconHome, color: 'rose' },
-  { path: '/weight', label: '体重', icon: IconWeight, color: 'warm' },
+  { path: '/history', label: '记录', icon: IconHistory, color: 'sky' },
+  { path: '/stats', label: '统计', icon: IconStats, color: 'emerald' },
+  { path: '/settings', label: '设置', icon: IconSettings, color: 'warm' },
 ];
 
 const activeBg: Record<string, string> = {
   rose: 'bg-rose-100',
   sky: 'bg-sky-100',
-  violet: 'bg-violet-100',
-  amber: 'bg-amber-100',
-  warm: 'bg-emerald-100',
+  emerald: 'bg-emerald-100',
+  warm: 'bg-warm-100',
 };
 
 const activeText: Record<string, string> = {
   rose: 'text-rose-500',
   sky: 'text-sky-500',
-  violet: 'text-violet-500',
-  amber: 'text-amber-500',
-  warm: 'text-emerald-600',
+  emerald: 'text-emerald-600',
+  warm: 'text-stone-500',
 };
 
 export default function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-warm-50/90 backdrop-blur-lg shadow-[0_-1px_12px_rgba(0,0,0,0.04)] flex justify-around items-center h-16 z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-warm-50/90 backdrop-blur-lg shadow-[0_-1px_12px_rgba(0,0,0,0.04)] flex justify-around items-center h-16 z-50 pb-[env(safe-area-inset-bottom)]">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         return (
