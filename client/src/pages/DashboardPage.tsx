@@ -113,7 +113,7 @@ export default function DashboardPage() {
       <div className="max-w-md mx-auto px-4 pt-3 pb-20">
 
         {/* Header */}
-        <h1 className="text-xl font-serif font-bold text-stone-900 mb-4">宝宝护理追踪</h1>
+        <h1 className="text-2xl font-serif font-bold text-stone-900 mb-5">宝宝日记</h1>
 
         {babies.length === 0 ? (
           <Card>
