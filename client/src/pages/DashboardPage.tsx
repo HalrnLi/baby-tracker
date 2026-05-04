@@ -155,9 +155,6 @@ export default function DashboardPage() {
                     <div className="text-sm text-stone-400 mt-1.5">
                       {getRecordLabel(stats.lastFeed.type, stats.lastFeed.data)}
                     </div>
-                    <div className="text-xs text-stone-300 mt-3">
-                      今日共 {stats?.feedCount || 0} 次
-                    </div>
                   </>
                 ) : (
                   <div className="text-sm text-stone-400">暂无记录</div>
@@ -177,9 +174,6 @@ export default function DashboardPage() {
                     </div>
                     <div className="text-sm text-stone-400 mt-1.5">
                       {getRecordLabel(stats.lastDiaper.type, stats.lastDiaper.data)}
-                    </div>
-                    <div className="text-xs text-stone-300 mt-3">
-                      今日共 {stats?.diaperCount || 0} 次
                     </div>
                   </>
                 ) : (
