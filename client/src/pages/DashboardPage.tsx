@@ -7,7 +7,7 @@ import Card from '../components/ui/Card';
 import EmptyState from '../components/ui/EmptyState';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { IconFeed, IconPump, IconDiaper, IconWeight, IconPlus, IconBaby, IconBreast, IconFormula, IconPee, IconPoop, IconBack } from '../components/icons';
-import { formatTimeAgo, formatRecordTime, getRecordLabel } from '../utils/format';
+import { formatTimeAgo, formatRecordTime, formatAge, getRecordLabel } from '../utils/format';
 import { useSync } from '../hooks/useSync';
 
 export default function DashboardPage() {
@@ -113,7 +113,12 @@ export default function DashboardPage() {
       <div className="max-w-md mx-auto px-4 pt-3 pb-20">
 
         {/* Header */}
-        <h1 className="text-2xl font-serif font-bold text-stone-900 mb-5">宝宝日记</h1>
+        <h1 className="text-2xl font-serif font-bold text-stone-900 mb-1">宝宝日记</h1>
+        {babies.length > 0 && babies[0]?.birthDate && (
+          <p className="text-sm text-stone-400 mb-5">
+            {babies[0].name} · {formatAge(babies[0].birthDate)}
+          </p>
+        )}
 
         {babies.length === 0 ? (
           <Card>
@@ -135,40 +140,46 @@ export default function DashboardPage() {
           <>
             {/* 上次状态卡片 */}
             <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="p-4 bg-warm-50 rounded-2xl shadow-soft">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-400 flex items-center justify-center">
-                    <IconFeed size={18} />
+              <div className="p-5 bg-warm-50 rounded-2xl shadow-soft">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-400 flex items-center justify-center">
+                    <IconFeed size={22} />
                   </div>
-                  <span className="text-sm font-semibold text-stone-600">喂奶</span>
+                  <span className="text-base font-semibold text-stone-600">喂奶</span>
                 </div>
                 {stats?.lastFeed ? (
                   <>
-                    <div className="text-lg font-bold text-stone-800">
+                    <div className="text-2xl font-bold text-stone-800">
                       {formatTimeAgo(stats.lastFeed.createdAt)}
                     </div>
-                    <div className="text-xs text-stone-400 mt-0.5">
+                    <div className="text-sm text-stone-400 mt-1.5">
                       {getRecordLabel(stats.lastFeed.type, stats.lastFeed.data)}
+                    </div>
+                    <div className="text-xs text-stone-300 mt-3">
+                      今日共 {stats?.feedCount || 0} 次
                     </div>
                   </>
                 ) : (
                   <div className="text-sm text-stone-400">暂无记录</div>
                 )}
               </div>
-              <div className="p-4 bg-warm-50 rounded-2xl shadow-soft">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-sky-100 text-sky-500 flex items-center justify-center">
-                    <IconDiaper size={18} />
+              <div className="p-5 bg-warm-50 rounded-2xl shadow-soft">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-sky-100 text-sky-500 flex items-center justify-center">
+                    <IconDiaper size={22} />
                   </div>
-                  <span className="text-sm font-semibold text-stone-600">尿布</span>
+                  <span className="text-base font-semibold text-stone-600">尿布</span>
                 </div>
                 {stats?.lastDiaper ? (
                   <>
-                    <div className="text-lg font-bold text-stone-800">
+                    <div className="text-2xl font-bold text-stone-800">
                       {formatTimeAgo(stats.lastDiaper.createdAt)}
                     </div>
-                    <div className="text-xs text-stone-400 mt-0.5">
+                    <div className="text-sm text-stone-400 mt-1.5">
                       {getRecordLabel(stats.lastDiaper.type, stats.lastDiaper.data)}
+                    </div>
+                    <div className="text-xs text-stone-300 mt-3">
+                      今日共 {stats?.diaperCount || 0} 次
                     </div>
                   </>
                 ) : (

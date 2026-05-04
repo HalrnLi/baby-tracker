@@ -80,3 +80,27 @@ export function getRecordLabel(type: string, data: any): string {
       return '';
   }
 }
+
+export function formatAge(birthDate: string): string {
+  const birth = new Date(birthDate);
+  const now = new Date();
+  let years = now.getFullYear() - birth.getFullYear();
+  let months = now.getMonth() - birth.getMonth();
+  let days = now.getDate() - birth.getDate();
+
+  if (days < 0) {
+    months--;
+    const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+    days += prevMonth.getDate();
+  }
+  if (months < 0) {
+    years--;
+    months += 12;
+  }
+
+  const totalMonths = years * 12 + months;
+
+  if (totalMonths < 1) return `${days}天`;
+  if (years < 1) return `${totalMonths}个月${days > 0 ? `${days}天` : ''}`;
+  return `${years}岁${months}个月`;
+}
